@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Marketing Platform{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card fade-in">
+        <div class="auth-header">
+            <h2><i class="bi bi-graph-up me-2"></i>Marketing Platform</h2>
+            <p class="mb-0">Welcome back! Please sign in to your account.</p>
+        </div>
+        
+        <div class="auth-body">
+            <!-- Tab Navigation -->
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="showTab('login')">
+                    <i class="bi bi-box-arrow-in-right me-1"></i>Login
+                </button>
+                <button class="auth-tab" onclick="showTab('register')">
+                    <i class="bi bi-person-plus me-1"></i>Register
+                </button>
+            </div>
+
+            <!-- Flash Messages -->
+            <div id="messages"></div>
+
+            <!-- Login Form -->
+            <div id="loginTab" class="tab-content">
+                <form id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="mb-3">
+                        <label for="loginUsername" class="form-label">
+                            <i class="bi bi-person me-1"></i>Username
+                        </label>
+                        <input type="text" class="form-control" id="loginUsername" required 
+                               placeholder="Enter your username">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="loginPassword" class="form-label">
+                            <i class="bi bi-lock me-1"></i>Password
+                        </label>
+                        <input type="password" class="form-control" id="loginPassword" required 
+                               placeholder="Enter your password">
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="rememberMe">
+                        <label class="form-check-label" for="rememberMe">
+                            Remember me
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100 mb-3">
+                        <i class="bi bi-box-arrow-in-right me-1"></i>
+                        Sign In
+                    </button>
+                </form>
+                
+                <!-- Demo Accounts -->
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h6 class="card-title">Demo Accounts</h6>
+                        <div class="row">
+                            <div class="col-6">
+                                <button class="btn btn-outline-primary btn-sm w-100" 
+                                        onclick="fillDemoAccount('admin', 'admin123')">
+                                    <i class="bi bi-shield-check me-1"></i>Admin
+                                </button>
+                            </div>
+                            <div class="col-6">
+                                <button class="btn btn-outline-secondary btn-sm w-100" 
+                                        onclick="fillDemoAccount('sara', 'password123')">
+                                    <i class="bi bi-person me-1"></i>Employee
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Register Form -->
+            <div id="registerTab" class="tab-content" style="display: none;">
+                <form id="registerForm" onsubmit="handleRegister(event)">
+                    <div class="mb-3">
+                        <label for="regUsername" class="form-label">
+                            <i class="bi bi-person me-1"></i>Username
+                        </label>
+                        <input type="text" class="form-control" id="regUsername" required 
+                               placeholder="Choose a username">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="regEmail" class="form-label">
+                            <i class="bi bi-envelope me-1"></i>Email
+                        </label>
+                        <input type="email" class="form-control" id="regEmail" required 
+                               placeholder="Enter your email">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="regPassword" class="form-label">
+                            <i class="bi bi-lock me-1"></i>Password
+                        </label>
+                        <input type="password" class="form-control" id="regPassword" required 
+                               placeholder="Create a password">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="regRole" class="form-label">
+                            <i class="bi bi-person-badge me-1"></i>Role
+                        </label>
+                        <select class="form-select" id="regRole">
+                            <option value="employee">Employee</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-person-plus me-1"></i>
+                        Create Account
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function showTab(tabName) {
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.style.display = 'none';
+        });
+        
+        // Remove active class from all tab buttons
+        document.querySelectorAll('.auth-tab').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // Show selected tab
+        document.getElementById(tabName + 'Tab').style.display = 'block';
+        event.target.classList.add('active');
+    }
+
+    function fillDemoAccount(username, password) {
+        document.getElementById('loginUsername').value = username;
+        document.getElementById('loginPassword').value = password;
+    }
+
+    async function handleLogin(event) {
+        event.preventDefault();
+        
+        const submitBtn = event.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="bi bi-arrow-clockwise spin"></i> Signing in...';
+        submitBtn.disabled = true;
+        
+        const username = document.getElementById('loginUsername').value;
+        const password = document.getElementById('loginPassword').value;
+        
+        try {
+            const response = await fetch('/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showMessage(`Welcome back, ${data.user.username}!`, 'success');
+                setTimeout(() => {
+                    window.location.href = '/dashboard';
+                }, 1000);
+            } else {
+                showMessage(data.error || 'Login failed', 'danger');
+            }
+        } catch (error) {
+            showMessage('Connection error: ' + error.message, 'danger');
+        } finally {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
+    }
+
+    async function handleRegister(event) {
+        event.preventDefault();
+        
+        const submitBtn = event.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="bi bi-arrow-clockwise spin"></i> Creating account...';
+        submitBtn.disabled = true;
+        
+        const username = document.getElementById('regUsername').value;
+        const email = document.getElementById('regEmail').value;
+        const password = document.getElementById('regPassword').value;
+        const role = document.getElementById('regRole').value;
+        
+        try {
+            const response = await fetch('/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, email, password, role })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showMessage(`Account created successfully! Welcome, ${data.user.username}`, 'success');
+                // Clear form
+                document.getElementById('registerForm').reset();
+                // Switch to login tab after 2 seconds
+                setTimeout(() => {
+                    showTab('login');
+                    document.getElementById('loginUsername').value = username;
+                }, 2000);
+            } else {
+                showMessage(data.error || 'Registration failed', 'danger');
+            }
+        } catch (error) {
+            showMessage('Connection error: ' + error.message, 'danger');
+        } finally {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
+    }
+
+    function showMessage(message, type) {
+        const messagesDiv = document.getElementById('messages');
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        messagesDiv.appendChild(alertDiv);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
+    }
+
+    // Add spinning animation for loading states
+    const style = document.createElement('style');
+    style.textContent = `
+        .spin {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    `;
+    document.head.appendChild(style);
+</script>
+{% endblock %}
