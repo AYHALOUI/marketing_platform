@@ -355,6 +355,9 @@ async function testAPI() {
     showAlert('API test completed! Check the console for results.', 'info');
 }
 
+// Update the displayProjects function in your dashboard template
+// Replace the existing function with this updated version:
+
 function displayProjects(projects) {
     const container = document.getElementById('projectsContainer');
     if (!container) {
@@ -427,8 +430,8 @@ function displayProjects(projects) {
                         </small>
                     </div>
                     <div class="project-actions">
-                        <button class="btn btn-outline-primary btn-sm" onclick="viewProject(${project.id})" style="border-radius: 20px;">
-                            <i class="bi bi-eye me-1"></i>View
+                        <button class="btn btn-outline-primary btn-sm" onclick="window.location.href='/project/${project.id}'" style="border-radius: 20px;">
+                            <i class="bi bi-eye me-1"></i>View Details
                         </button>
                         ${currentUser && currentUser.role === 'admin' ? `
                             <button class="btn btn-outline-danger btn-sm" onclick="deleteProject(${project.id}, '${escapeHtml(project.name || 'Project')}')" style="border-radius: 20px;">

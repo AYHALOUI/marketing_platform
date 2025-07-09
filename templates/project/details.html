@@ -1,0 +1,604 @@
+{% extends "base.html" %}
+
+{% block title %}Project Details - Marketing Platform{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumb Navigation -->
+    <nav aria-label="breadcrumb" class="mb-4 fade-in">
+        <ol class="breadcrumb" style="background: transparent; padding: 0;">
+            <li class="breadcrumb-item">
+                <a href="{{ url_for('dashboard') }}" style="color: #6366f1; text-decoration: none;">
+                    <i class="bi bi-house-door me-1"></i>Dashboard
+                </a>
+            </li>
+            <li class="breadcrumb-item active" style="color: #6b7280;">Project Details</li>
+        </ol>
+    </nav>
+
+    <!-- Project Header -->
+    <div class="card border-0 mb-4 fade-in" style="animation-delay: 0.1s;">
+        <div class="card-body" style="padding: 2rem;">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div class="d-flex align-items-center mb-3">
+                        <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #6366f1, #ec4899); border-radius: 15px; display: flex; align-items: center; justify-content: center; margin-right: 1.5rem;">
+                            <i class="bi bi-folder2-open text-white" style="font-size: 1.8rem;"></i>
+                        </div>
+                        <div>
+                            <h1 class="h2 mb-1" id="projectTitle" style="font-weight: 800; color: #1f2937;">Loading...</h1>
+                            <span class="badge" id="projectStatus" style="font-size: 0.8rem; padding: 0.5rem 1rem; border-radius: 20px;">Loading...</span>
+                        </div>
+                    </div>
+                    <p class="text-muted mb-3" id="projectDescription" style="font-size: 1.1rem;">Loading project description...</p>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center text-muted">
+                                <i class="bi bi-person-circle me-2" style="color: #6366f1;"></i>
+                                <span><strong>Owner:</strong> <span id="projectOwner">Loading...</span></span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center text-muted">
+                                <i class="bi bi-calendar-event me-2" style="color: #ec4899;"></i>
+                                <span><strong>Due Date:</strong> <span id="projectDueDate">Loading...</span></span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center text-muted">
+                                <i class="bi bi-clock me-2" style="color: #f59e0b;"></i>
+                                <span><strong>Created:</strong> <span id="projectCreated">Loading...</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="text-center">
+                        <div class="position-relative d-inline-block mb-3">
+                            <svg width="120" height="120" class="progress-ring">
+                                <circle cx="60" cy="60" r="50" fill="transparent" stroke="#e5e7eb" stroke-width="8"/>
+                                <circle cx="60" cy="60" r="50" fill="transparent" stroke-width="8" 
+                                        id="progressCircle" class="progress-ring-circle"
+                                        style="stroke: url(#gradient); stroke-dasharray: 314; stroke-dashoffset: 314; transition: stroke-dashoffset 0.5s ease-in-out;"/>
+                                <defs>
+                                    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" style="stop-color:#6366f1"/>
+                                        <stop offset="100%" style="stop-color:#ec4899"/>
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                            <div class="position-absolute top-50 start-50 translate-middle">
+                                <h3 class="mb-0" id="progressPercentage" style="font-weight: 800; color: #6366f1;">0%</h3>
+                                <small class="text-muted">Complete</small>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="badge bg-light text-dark" style="font-size: 0.9rem; padding: 0.5rem 1rem;">
+                                <i class="bi bi-check2-square me-1" style="color: #10b981;"></i>
+                                <span id="taskCount">0</span> Tasks
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="mt-4 d-flex gap-2">
+                {% if current_user.is_admin() %}
+                <button class="btn btn-primary" onclick="editProject()">
+                    <i class="bi bi-pencil me-1"></i>Edit Project
+                </button>
+                {% endif %}
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addTaskModal">
+                    <i class="bi bi-plus-circle me-1"></i>Add Task
+                </button>
+                <button class="btn btn-outline-primary" onclick="exportProject()">
+                    <i class="bi bi-download me-1"></i>Export
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tasks Section -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 fade-in" style="animation-delay: 0.3s;">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-list-task me-2" style="color: #6366f1;"></i>Project Tasks
+                    </h5>
+                    <div class="d-flex align-items-center gap-2">
+                        <select class="form-select form-select-sm" id="filterTasks" style="width: auto;">
+                            <option value="all">All Tasks</option>
+                            <option value="todo">To Do</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                        <button class="btn btn-outline-primary btn-sm" onclick="loadTasks()">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body" style="padding: 2rem;">
+                    <div id="tasksContainer">
+                        <div class="loading text-center py-5">
+                            <i class="bi bi-arrow-clockwise spin" style="font-size: 2rem; color: #6366f1;"></i>
+                            <p class="mt-3" style="font-weight: 600;">Loading tasks...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Task Modal -->
+<div class="modal fade" id="addTaskModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle me-2"></i>Add New Task
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addTaskForm">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="taskTitle" class="form-label">
+                                    <i class="bi bi-card-text me-1"></i>Task Title *
+                                </label>
+                                <input type="text" class="form-control" id="taskTitle" required 
+                                       placeholder="e.g., Create landing page design">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="taskStatus" class="form-label">
+                                    <i class="bi bi-gear me-1"></i>Status
+                                </label>
+                                <select class="form-select" id="taskStatus">
+                                    <option value="todo">📋 To Do</option>
+                                    <option value="in_progress">⚡ In Progress</option>
+                                    <option value="completed">✅ Completed</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="taskDescription" class="form-label">
+                            <i class="bi bi-textarea-t me-1"></i>Description
+                        </label>
+                        <textarea class="form-control" id="taskDescription" rows="3" 
+                                  placeholder="Describe the task details..."></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="taskAssignedTo" class="form-label">
+                                    <i class="bi bi-person me-1"></i>Assigned To
+                                </label>
+                                <input type="text" class="form-control" id="taskAssignedTo" 
+                                       placeholder="Enter assignee name">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="taskDueDate" class="form-label">
+                                    <i class="bi bi-calendar-event me-1"></i>Due Date
+                                </label>
+                                <input type="date" class="form-control" id="taskDueDate">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>Cancel
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-plus-circle me-1"></i>Add Task
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Global variables
+let currentProjectId = null;
+let projectData = null;
+let tasks = [];
+
+// Get project ID from URL
+function getProjectIdFromUrl() {
+    const pathParts = window.location.pathname.split('/');
+    return pathParts[pathParts.length - 1];
+}
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    currentProjectId = getProjectIdFromUrl();
+    
+    if (!currentProjectId || isNaN(currentProjectId)) {
+        showAlert('Invalid project ID', 'danger');
+        window.location.href = '/dashboard';
+        return;
+    }
+    
+    // Set up event listeners
+    document.getElementById('addTaskForm').addEventListener('submit', addTask);
+    document.getElementById('filterTasks').addEventListener('change', filterTasks);
+    
+    // Load project data
+    loadProject();
+});
+
+// Load project details
+async function loadProject() {
+    try {
+        const response = await fetch(`/api/projects/${currentProjectId}`);
+        
+        if (!response.ok) {
+            if (response.status === 404) {
+                showAlert('Project not found', 'danger');
+                window.location.href = '/dashboard';
+                return;
+            }
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        projectData = await response.json();
+        displayProject(projectData);
+        displayTasks(projectData.tasks || []);
+        
+    } catch (error) {
+        console.error('Error loading project:', error);
+        showAlert('Error loading project: ' + error.message, 'danger');
+    }
+}
+
+// Display project information
+function displayProject(project) {
+    document.getElementById('projectTitle').textContent = project.name;
+    document.getElementById('projectDescription').textContent = project.description || 'No description provided';
+    document.getElementById('projectOwner').textContent = project.owner;
+    document.getElementById('projectDueDate').textContent = project.due_date ? 
+        new Date(project.due_date).toLocaleDateString() : 'No due date set';
+    document.getElementById('projectCreated').textContent = 
+        new Date(project.created_at).toLocaleDateString();
+    
+    // Update status badge
+    const statusBadge = document.getElementById('projectStatus');
+    statusBadge.textContent = getStatusEmoji(project.status) + ' ' + project.status.toUpperCase();
+    statusBadge.className = `badge project-status ${project.status}`;
+    
+    // Update progress
+    updateProgress(project.progress || 0);
+    document.getElementById('taskCount').textContent = project.task_count || 0;
+    
+    // Update page title
+    document.title = `${project.name} - Marketing Platform`;
+}
+
+// Update progress circle
+function updateProgress(percentage) {
+    const circle = document.getElementById('progressCircle');
+    const percentageText = document.getElementById('progressPercentage');
+    
+    const circumference = 2 * Math.PI * 50; // radius = 50
+    const offset = circumference - (percentage / 100) * circumference;
+    
+    circle.style.strokeDashoffset = offset;
+    percentageText.textContent = percentage + '%';
+}
+
+// Display tasks
+function displayTasks(taskList) {
+    tasks = taskList;
+    const container = document.getElementById('tasksContainer');
+    
+    if (!taskList || taskList.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-5">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">📝</div>
+                <h5 style="color: #6b7280; font-weight: 700;">No Tasks Yet</h5>
+                <p style="color: #9ca3af; font-size: 1.1rem; margin-bottom: 2rem;">
+                    Add your first task to get started with this project!
+                </p>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addTaskModal">
+                    <i class="bi bi-plus-circle me-2"></i>Add First Task
+                </button>
+            </div>
+        `;
+        return;
+    }
+    
+    const tasksHTML = taskList.map((task, index) => `
+        <div class="task-card mb-3 slide-up" data-status="${task.status}" style="animation-delay: ${0.1 * index}s;">
+            <div class="card border-0" style="border-left: 4px solid ${getTaskStatusColor(task.status)} !important;">
+                <div class="card-body" style="padding: 1.5rem;">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="flex-grow-1">
+                            <h6 class="task-title mb-1" style="font-weight: 700; color: #1f2937;">${escapeHtml(task.title)}</h6>
+                            <p class="task-description text-muted mb-2" style="font-size: 0.9rem;">${escapeHtml(task.description) || 'No description'}</p>
+                        </div>
+                        <div class="task-actions d-flex gap-1">
+                            <button class="btn btn-outline-primary btn-sm" onclick="editTask(${task.id})" style="border-radius: 15px;">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="deleteTask(${task.id})" style="border-radius: 15px;">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="badge task-status-badge ${task.status}" style="padding: 0.4rem 0.8rem; border-radius: 15px;">
+                                ${getTaskStatusEmoji(task.status)} ${task.status.replace('_', ' ').toUpperCase()}
+                            </span>
+                            ${task.assigned_to ? `
+                                <small class="text-muted">
+                                    <i class="bi bi-person me-1" style="color: #6366f1;"></i>${escapeHtml(task.assigned_to)}
+                                </small>
+                            ` : ''}
+                            ${task.due_date ? `
+                                <small class="text-muted ${isTaskOverdue(task) ? 'text-danger' : ''}">
+                                    <i class="bi bi-calendar me-1" style="color: #ec4899;"></i>${formatDate(task.due_date)}
+                                    ${isTaskOverdue(task) ? '<i class="bi bi-exclamation-triangle ms-1"></i>' : ''}
+                                </small>
+                            ` : ''}
+                        </div>
+                        <div class="task-status-controls">
+                            <select class="form-select form-select-sm" onchange="updateTaskStatus(${task.id}, this.value)" style="width: auto; font-size: 0.8rem;">
+                                <option value="todo" ${task.status === 'todo' ? 'selected' : ''}>📋 To Do</option>
+                                <option value="in_progress" ${task.status === 'in_progress' ? 'selected' : ''}>⚡ In Progress</option>
+                                <option value="completed" ${task.status === 'completed' ? 'selected' : ''}>✅ Completed</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+    
+    container.innerHTML = tasksHTML;
+}
+
+// Add new task
+async function addTask(event) {
+    event.preventDefault();
+    
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="bi bi-arrow-clockwise spin me-1"></i> Adding...';
+    submitBtn.disabled = true;
+    
+    try {
+        const taskData = {
+            title: document.getElementById('taskTitle').value.trim(),
+            description: document.getElementById('taskDescription').value.trim(),
+            status: document.getElementById('taskStatus').value,
+            assigned_to: document.getElementById('taskAssignedTo').value.trim(),
+            due_date: document.getElementById('taskDueDate').value || null
+        };
+        
+        if (!taskData.title) {
+            throw new Error('Task title is required');
+        }
+        
+        const response = await fetch(`/api/projects/${currentProjectId}/tasks`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(taskData)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showAlert(`✅ Task "${data.task.title}" added successfully!`, 'success');
+            
+            // Close modal and reset form
+            bootstrap.Modal.getInstance(document.getElementById('addTaskModal')).hide();
+            document.getElementById('addTaskForm').reset();
+            
+            // Reload project data
+            await loadProject();
+            
+        } else {
+            throw new Error(data.error || 'Failed to add task');
+        }
+        
+    } catch (error) {
+        console.error('Error adding task:', error);
+        showAlert('Error adding task: ' + error.message, 'danger');
+    } finally {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+}
+
+// Update task status
+async function updateTaskStatus(taskId, newStatus) {
+    try {
+        const response = await fetch(`/api/tasks/${taskId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus })
+        });
+        
+        if (response.ok) {
+            showAlert('Task status updated!', 'success');
+            await loadProject(); // Reload to update progress
+        } else {
+            const data = await response.json();
+            throw new Error(data.error || 'Failed to update task status');
+        }
+        
+    } catch (error) {
+        console.error('Error updating task status:', error);
+        showAlert('Error updating task status: ' + error.message, 'danger');
+    }
+}
+
+// Filter tasks
+function filterTasks() {
+    const filter = document.getElementById('filterTasks').value;
+    const taskCards = document.querySelectorAll('.task-card');
+    
+    taskCards.forEach(card => {
+        const taskStatus = card.dataset.status;
+        if (filter === 'all' || taskStatus === filter) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+// Utility functions
+function getStatusEmoji(status) {
+    const emojis = {
+        'active': '🚀',
+        'completed': '✅',
+        'paused': '⏸️',
+        'cancelled': '❌'
+    };
+    return emojis[status] || '📋';
+}
+
+function getTaskStatusEmoji(status) {
+    const emojis = {
+        'todo': '📋',
+        'in_progress': '⚡',
+        'completed': '✅'
+    };
+    return emojis[status] || '📋';
+}
+
+function getTaskStatusColor(status) {
+    const colors = {
+        'todo': '#6b7280',
+        'in_progress': '#f59e0b',
+        'completed': '#10b981'
+    };
+    return colors[status] || '#6b7280';
+}
+
+function isTaskOverdue(task) {
+    if (!task.due_date || task.status === 'completed') return false;
+    return new Date(task.due_date) < new Date();
+}
+
+function formatDate(dateString) {
+    return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function showAlert(message, type = 'info') {
+    const existingAlerts = document.querySelectorAll('.alert.position-fixed');
+    existingAlerts.forEach(alert => alert.remove());
+    
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 90px; right: 20px; z-index: 9999; min-width: 350px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 4000);
+}
+
+// Placeholder functions for future implementation
+function editProject() {
+    showAlert('🔧 Project editing feature coming soon!', 'info');
+}
+
+function editTask(taskId) {
+    showAlert(`🔧 Task editing feature coming soon! Task ID: ${taskId}`, 'info');
+}
+
+function deleteTask(taskId) {
+    showAlert(`🗑️ Task deletion feature coming soon! Task ID: ${taskId}`, 'info');
+}
+
+function exportProject() {
+    showAlert('📊 Export feature coming soon!', 'info');
+}
+
+function loadTasks() {
+    loadProject();
+}
+</script>
+
+<style>
+.task-status-badge.todo {
+    background: linear-gradient(135deg, #6b7280, #9ca3af);
+    color: white;
+}
+
+.task-status-badge.in_progress {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    color: white;
+}
+
+.task-status-badge.completed {
+    background: linear-gradient(135deg, #10b981, #34d399);
+    color: white;
+}
+
+.project-status.active {
+    background: linear-gradient(135deg, #10b981, #34d399);
+    color: white;
+}
+
+.project-status.completed {
+    background: linear-gradient(135deg, #6366f1, #818cf8);
+    color: white;
+}
+
+.project-status.paused {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    color: white;
+}
+
+.progress-ring-circle {
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+}
+
+.task-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.task-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+</style>
+{% endblock %}
