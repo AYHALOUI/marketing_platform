@@ -18,6 +18,11 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///marketing_platform.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
+    # IMPORTANT: Enable development mode for auto-reload
+    app.config['DEBUG'] = True
+    app.config['TEMPLATES_AUTO_RELOAD'] = True
+    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+    
     # Initialize extensions with app
     from models import db
     db.init_app(app)
@@ -78,4 +83,13 @@ def create_app():
 
 if __name__ == '__main__':
     app = create_app()
-    app.run(debug=True)
+    
+    # Run with debug mode and auto-reload
+    app.run(
+        debug=True,
+        host='127.0.0.1',
+        port=5000,
+        use_reloader=True,
+        use_debugger=True,
+        threaded=True
+    )
