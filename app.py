@@ -48,7 +48,22 @@ def create_app():
     app.register_blueprint(projects_bp)
     app.register_blueprint(tasks_bp)
 
-    
+    @app.route('/debug/users')
+    def debug_users():
+        from models import User
+        users = User.query.all()
+        user_list = []
+        for user in users:
+            user_list.append({
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'role': user.role,
+                'created_at': str(user.created_at)
+            })
+        return {'users': user_list, 'count': len(users)}
+
+
     # Basic routes
     @app.route('/')
     def index():

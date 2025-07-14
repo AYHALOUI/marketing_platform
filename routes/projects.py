@@ -97,6 +97,16 @@ def create_project():
         if not data or not data.get('name'):
             return jsonify({'error': 'Project name is required'}), 400
         
+        # Check if assigned_to user exists
+        assigned_user_id = data.get('assigned_to')
+        if assigned_user_id:
+            from models import User
+            assigned_user = User.query.get(assigned_user_id)
+            if not assigned_user:
+                return jsonify({'error': 'Assigned user not found'}), 400
+        else:
+            return jsonify({'error': 'Please assign the project to a user'}), 400
+        
         # Parse due_date if provided
         due_date = None
         if data.get('due_date'):
@@ -110,14 +120,11 @@ def create_project():
             description=data.get('description', ''),
             status=data.get('status', 'active'),
             due_date=due_date,
-            user_id=current_user.id
+            user_id=assigned_user_id  # Assign to selected user instead of current admin
         )
         
         db.session.add(project)
         db.session.commit()
-        
-        # Trigger N8N webhook (we'll implement this later)
-        # trigger_n8n_webhook('project_created', project)
         
         return jsonify({
             'message': 'Project created successfully',
@@ -128,7 +135,8 @@ def create_project():
                 'status': project.status,
                 'due_date': project.due_date.isoformat() if project.due_date else None,
                 'created_at': project.created_at.isoformat(),
-                'owner': project.owner.username
+                'owner': project.owner.username,
+                'assigned_to': assigned_user.username
             }
         }), 201
         

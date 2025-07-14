@@ -280,8 +280,9 @@
                                 <label for="taskAssignedTo" class="form-label">
                                     <i class="bi bi-person me-1"></i>Assigned To
                                 </label>
-                                <input type="text" class="form-control" id="taskAssignedTo" 
-                                       placeholder="Enter assignee name">
+                                <select class="form-select" id="taskAssignedTo">
+                                    <option value="">Select User...</option>
+                                </select>
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -335,11 +336,32 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('filterTasks').addEventListener('change', filterTasks);
     
     // Set up edit project modal event
-    document.getElementById('editProjectModal').addEventListener('show.bs.modal', populateEditForm);
+    document.getElementById('addTaskModal').addEventListener('show.bs.modal', loadUsersForTask);
     
     // Load project data
     loadProject();
 });
+
+// Load users for task assignment dropdown
+async function loadUsersForTask() {
+    try {
+        // For now, let's add users manually until we fix the endpoint
+        const users = [
+            { id: 1, username: 'admin', role: 'admin' },
+            { id: 2, username: 'sara', role: 'employee' }
+        ];
+        
+        const select = document.getElementById('taskAssignedTo');
+        if (select) {
+            select.innerHTML = '<option value="">Select User...</option>';
+            users.forEach(user => {
+                select.innerHTML += `<option value="${user.username}">${user.username} (${user.role})</option>`;
+            });
+        }
+    } catch (error) {
+        console.error('Error loading users for task:', error);
+    }
+}
 
 // Load project details
 async function loadProject() {

@@ -155,7 +155,7 @@
             <form id="createProjectForm">
                 <div class="modal-body">
                     <div class="row">
-                        <div class="col-md-8">
+                        <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="projectName" class="form-label">
                                     <i class="bi bi-tag me-1"></i>Project Name *
@@ -164,7 +164,18 @@
                                        placeholder="e.g., Summer Sale Campaign 2025">
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="taskAssignedTo" class="form-label">
+                                        <i class="bi bi-person me-1"></i>Assigned To
+                                    </label>
+                                    <input type="text" class="form-control" id="taskAssignedTo" 
+                                           placeholder="Enter assignee name">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
                             <div class="mb-3">
                                 <label for="projectStatus" class="form-label">
                                     <i class="bi bi-gear me-1"></i>Status
@@ -202,7 +213,7 @@
                                 <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(236, 72, 153, 0.1)); border-radius: 12px; padding: 1rem; font-size: 0.85rem;">
                                     <div style="color: #6366f1; font-weight: 600;">💡 Pro Tips:</div>
                                     <div style="color: #6b7280; margin-top: 0.5rem;">
-                                        • Use clear, descriptive names<br>
+                                        • Assign to the right team member<br>
                                         • Set realistic deadlines<br>
                                         • Add detailed descriptions
                                     </div>
@@ -355,9 +366,6 @@ async function testAPI() {
     showAlert('API test completed! Check the console for results.', 'info');
 }
 
-// Update the displayProjects function in your dashboard template
-// Replace the existing function with this updated version:
-
 function displayProjects(projects) {
     const container = document.getElementById('projectsContainer');
     if (!container) {
@@ -485,6 +493,24 @@ function updateStats(projects) {
     debugLog(`📊 Stats updated: ${total} total, ${active} active, ${completed} completed, ${totalTasks} tasks`);
 }
 
+// Load users for assignment dropdown
+async function loadUsers() {
+    try {
+        const response = await fetch('/debug/users');
+        const data = await response.json();
+        
+        const select = document.getElementById('projectAssignedTo');
+        if (select && data.users) {
+            select.innerHTML = '<option value="">Select User...</option>';
+            data.users.forEach(user => {
+                select.innerHTML += `<option value="${user.id}">${user.username} (${user.role})</option>`;
+            });
+        }
+    } catch (error) {
+        console.error('Error loading users:', error);
+    }
+}
+
 async function createProject(event) {
     event.preventDefault();
     
@@ -500,11 +526,16 @@ async function createProject(event) {
             name: document.getElementById('projectName').value.trim(),
             description: document.getElementById('projectDescription').value.trim(),
             due_date: document.getElementById('projectDueDate').value || null,
-            status: document.getElementById('projectStatus').value
+            status: document.getElementById('projectStatus').value,
+            assigned_to: document.getElementById('projectAssignedTo').value
         };
         
         if (!projectData.name) {
             throw new Error('Project name is required');
+        }
+        
+        if (!projectData.assigned_to) {
+            throw new Error('Please assign the project to a user');
         }
         
         debugLog(`📝 Creating project: ${JSON.stringify(projectData)}`);
@@ -519,7 +550,7 @@ async function createProject(event) {
         debugLog(`✅ Project created: ${JSON.stringify(data)}`);
         
         if (response.ok) {
-            showAlert(`🎉 Project "${data.project.name}" created successfully!`, 'success');
+            showAlert(`🎉 Project "${data.project.name}" created and assigned successfully!`, 'success');
             
             // Close modal
             const modalElement = document.getElementById('createProjectModal');
@@ -654,6 +685,9 @@ function showAlert(message, type = 'info') {
         }
     }, 4000);
 }
+
+// Load users when modal opens
+document.getElementById('createProjectModal').addEventListener('show.bs.modal', loadUsers);
 
 // Error handlers
 window.addEventListener('error', function(event) {
