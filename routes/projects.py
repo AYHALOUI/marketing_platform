@@ -120,7 +120,8 @@ def create_project():
             description=data.get('description', ''),
             status=data.get('status', 'active'),
             due_date=due_date,
-            user_id=assigned_user_id  # Assign to selected user instead of current admin
+            user_id=assigned_user_id,
+            client_id=data.get('client_id')  # ADD THIS LINE
         )
         
         db.session.add(project)

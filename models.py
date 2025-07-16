@@ -33,13 +33,15 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return f'<User {self.username}>'
 
+
 class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
-    status = db.Column(db.String(50), nullable=False, default='active')  # 'active', 'completed', 'paused'
+    status = db.Column(db.String(50), nullable=False, default='active')
     due_date = db.Column(db.Date)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    client_id = db.Column(db.Integer, db.ForeignKey('client.id'), nullable=True)  # ADD THIS LINE
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
@@ -130,3 +132,18 @@ class AutomationTrigger(db.Model):
     
     def __repr__(self):
         return f'<AutomationTrigger {self.trigger_name}>'
+    
+class Client(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    company = db.Column(db.String(200))
+    email = db.Column(db.String(120))
+    sector = db.Column(db.String(100))  # business sector
+    logo_url = db.Column(db.String(500))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationship with projects
+    projects = db.relationship('Project', backref='client', lazy=True)
+    
+    def __repr__(self):
+        return f'<Client {self.name}>'

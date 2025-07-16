@@ -164,6 +164,16 @@
                                        placeholder="e.g., Summer Sale Campaign 2025">
                             </div>
                         </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="projectClient" class="form-label">
+                                    <i class="bi bi-building me-1"></i>Client *
+                                </label>
+                                <select class="form-select" id="projectClient" required>
+                                    <option value="">Select Client...</option>
+                                </select>
+                            </div>
+                        </div>
                         <div class="col-md-3">
                             <div class="mb-3">
                                 <label for="projectAssignedTo" class="form-label">
@@ -255,6 +265,26 @@ function debugLog(message) {
     }
 }
 
+async function loadClientsForProject() {
+    try {
+        const response = await fetch('/api/clients/');
+        const data = await response.json();
+        
+        console.log('API Response:', data); // ADD THIS DEBUG LINE
+        
+        const select = document.getElementById('projectClient');
+        if (select && data.clients) {
+            select.innerHTML = '<option value="">Select Client...</option>';
+            data.clients.forEach(client => {
+                console.log('Client:', client); // ADD THIS DEBUG LINE
+                select.innerHTML += `<option value="${client.id}">${client.name} - ${client.company}</option>`;
+            });
+        }
+    } catch (error) {
+        console.error('Error loading clients:', error);
+    }
+}
+
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', function() {
     debugLog('🚀 Dashboard initializing...');
@@ -263,6 +293,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const refreshBtn = document.getElementById('refreshBtn');
     const testBtn = document.getElementById('testBtn');
     const createForm = document.getElementById('createProjectForm');
+    const modal = document.getElementById('createProjectModal');
     
     if (refreshBtn) {
         refreshBtn.addEventListener('click', loadProjects);
@@ -274,6 +305,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (createForm) {
         createForm.addEventListener('submit', createProject);
+    }
+    
+    // Load users and clients when modal opens
+    if (modal) {
+        modal.addEventListener('show.bs.modal', function() {
+            loadUsers();
+            loadClientsForProject();
+        });
     }
     
     // Initialize dashboard
@@ -526,15 +565,16 @@ async function createProject(event) {
             description: document.getElementById('projectDescription').value.trim(),
             due_date: document.getElementById('projectDueDate').value || null,
             status: document.getElementById('projectStatus').value,
-            assigned_to: document.getElementById('projectAssignedTo').value
+            assigned_to: document.getElementById('projectAssignedTo').value,
+            client_id: document.getElementById('projectClient').value  // ADD THIS LINE
         };
-        
-        if (!projectData.name) {
-            throw new Error('Project name is required');
-        }
         
         if (!projectData.assigned_to) {
             throw new Error('Please assign the project to a user');
+        }
+
+        if (!projectData.client_id) {
+            throw new Error('Please select a client');
         }
         
         debugLog(`📝 Creating project: ${JSON.stringify(projectData)}`);
@@ -685,8 +725,7 @@ function showAlert(message, type = 'info') {
     }, 4000);
 }
 
-// Load users when modal opens
-document.getElementById('createProjectModal').addEventListener('show.bs.modal', loadUsers);
+
 
 // Error handlers
 window.addEventListener('error', function(event) {

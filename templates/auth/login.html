@@ -172,7 +172,7 @@
             if (response.ok) {
                 showMessage(`Welcome back, ${data.user.username}!`, 'success');
                 setTimeout(() => {
-                    window.location.href = '/dashboard';
+                    window.location.href = '/';
                 }, 1000);
             } else {
                 showMessage(data.error || 'Login failed', 'danger');

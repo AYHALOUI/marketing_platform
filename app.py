@@ -40,6 +40,9 @@ def create_app():
     from routes.auth import auth_bp
     from routes.projects import projects_bp
     from routes.tasks import tasks_bp
+    from routes.homepage import homepage_bp  # ADD THIS
+    from routes.clients import clients_bp  # ADD THIS
+
 
     from routes.auth import auth_bp
     from routes.projects import projects_bp
@@ -47,6 +50,9 @@ def create_app():
     app.register_blueprint(auth_bp)
     app.register_blueprint(projects_bp)
     app.register_blueprint(tasks_bp)
+    app.register_blueprint(homepage_bp)  # ADD THIS
+    app.register_blueprint(clients_bp)  # ADD THIS
+
 
     @app.route('/debug/users')
     def debug_users():
@@ -64,12 +70,6 @@ def create_app():
         return {'users': user_list, 'count': len(users)}
 
 
-    # Basic routes
-    @app.route('/')
-    def index():
-        if current_user.is_authenticated:
-            return redirect(url_for('dashboard'))
-        return redirect(url_for('login'))
     
     @app.route('/auth/login')
     def login():
