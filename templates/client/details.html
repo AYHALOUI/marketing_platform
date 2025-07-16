@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block title %}{{ client.name }} - Client Analytics{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Navigation -->
+    <div class="d-flex justify-content-between align-items-center mb-4 fade-in">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Homepage</a></li>
+                    <li class="breadcrumb-item active">{{ client.name }} Analytics</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <button class="btn btn-success me-2" onclick="exportClientReport()">
+                <i class="bi bi-download me-1"></i>Export Report
+            </button>
+            <a href="/" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left me-1"></i>Back to Homepage
+            </a>
+        </div>
+    </div>
+
+    <!-- Client Header with Key Metrics -->
+    <div class="card border-0 mb-4 fade-in">
+        <div class="card-body" style="padding: 2rem;">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #6366f1, #ec4899); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin-right: 1.5rem;">
+                            <i class="bi bi-building text-white" style="font-size: 2rem;"></i>
+                        </div>
+                        <div>
+                            <h1 class="h3 mb-1" style="font-weight: 800; color: #1f2937;">{{ client.name }}</h1>
+                            <p class="text-muted mb-1">{{ client.company }}</p>
+                            <span class="badge bg-primary">{{ client.sector }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <!-- Key Performance Metrics -->
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h3 class="mb-0" style="color: #6366f1; font-weight: 800;">{{ client.project_count }}</h3>
+                                <small class="text-muted">Total Projects</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h3 class="mb-0" style="color: #10b981; font-weight: 800;">
+                                    {{ client.projects | selectattr('status', 'equalto', 'active') | list | length }}
+                                </h3>
+                                <small class="text-muted">Active Campaigns</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h3 class="mb-0" style="color: #f59e0b; font-weight: 800;">$45.2K</h3>
+                                <small class="text-muted">Total Budget</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h3 class="mb-0" style="color: #ec4899; font-weight: 800;">+235%</h3>
+                                <small class="text-muted">ROI</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics Dashboard -->
+    <div class="row">
+        <!-- Project Performance Chart -->
+        <div class="col-lg-8 mb-4">
+            <div class="card border-0 fade-in">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-bar-chart me-2" style="color: #6366f1;"></i>Project Performance Over Time
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="performanceChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Project Status Distribution -->
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 fade-in">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-pie-chart me-2" style="color: #ec4899;"></i>Project Status
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="statusChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Campaign Analytics & Recent Activity -->
+    <div class="row">
+        <!-- Campaign Metrics -->
+        <div class="col-lg-6 mb-4">
+            <div class="card border-0 fade-in">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-graph-up me-2" style="color: #10b981;"></i>Campaign Metrics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <div class="p-3" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(236, 72, 153, 0.1)); border-radius: 12px;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h4 class="mb-0" style="color: #6366f1;">2.4M</h4>
+                                        <small class="text-muted">Total Impressions</small>
+                                    </div>
+                                    <i class="bi bi-eye" style="font-size: 1.5rem; color: #6366f1;"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="p-3" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(52, 211, 153, 0.1)); border-radius: 12px;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h4 class="mb-0" style="color: #10b981;">156K</h4>
+                                        <small class="text-muted">Clicks</small>
+                                    </div>
+                                    <i class="bi bi-cursor" style="font-size: 1.5rem; color: #10b981;"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="p-3" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(251, 191, 36, 0.1)); border-radius: 12px;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h4 class="mb-0" style="color: #f59e0b;">6.5%</h4>
+                                        <small class="text-muted">CTR</small>
+                                    </div>
+                                    <i class="bi bi-percent" style="font-size: 1.5rem; color: #f59e0b;"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="p-3" style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.1), rgba(251, 113, 113, 0.1)); border-radius: 12px;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h4 class="mb-0" style="color: #ec4899;">3,247</h4>
+                                        <small class="text-muted">Conversions</small>
+                                    </div>
+                                    <i class="bi bi-trophy" style="font-size: 1.5rem; color: #ec4899;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Projects -->
+        <div class="col-lg-6 mb-4">
+            <div class="card border-0 fade-in">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-clock-history me-2" style="color: #f59e0b;"></i>Recent Projects
+                    </h5>
+                    {% if current_user.is_admin() %}
+                    <button class="btn btn-success btn-sm">
+                        <i class="bi bi-plus-circle me-1"></i>New Project
+                    </button>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if client.projects %}
+                        {% for project in client.projects[:3] %}
+                        <div class="d-flex justify-content-between align-items-center mb-3 p-3" style="background: #f8fafc; border-radius: 12px;">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1" style="font-weight: 600;">{{ project.name }}</h6>
+                                <div class="d-flex align-items-center">
+                                    <span class="badge {% if project.status == 'active' %}bg-success{% elif project.status == 'completed' %}bg-primary{% else %}bg-warning{% endif %} me-2">
+                                        {{ project.status.upper() }}
+                                    </span>
+                                    <small class="text-muted">{{ project.progress }}% complete</small>
+                                </div>
+                            </div>
+                            <a href="/project/{{ project.id }}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-arrow-right"></i>
+                            </a>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-folder" style="font-size: 2rem; color: #6b7280;"></i>
+                            <p class="text-muted mt-2">No projects yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Initialize charts when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    initializeCharts();
+});
+
+function initializeCharts() {
+    // Project Performance Chart
+    const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+    new Chart(performanceCtx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            datasets: [{
+                label: 'Projects Completed',
+                data: [2, 3, 1, 4, 2, 3],
+                borderColor: '#6366f1',
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                tension: 0.4,
+                fill: true
+            }, {
+                label: 'Revenue Generated',
+                data: [15000, 23000, 8000, 32000, 18000, 28000],
+                borderColor: '#ec4899',
+                backgroundColor: 'rgba(236, 72, 153, 0.1)',
+                tension: 0.4,
+                fill: true,
+                yAxisID: 'y1'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Projects' }
+                },
+                y1: {
+                    type: 'linear',
+                    position: 'right',
+                    beginAtZero: true,
+                    title: { display: true, text: 'Revenue ($)' },
+                    grid: { drawOnChartArea: false }
+                }
+            },
+            plugins: {
+                legend: { position: 'top' }
+            }
+        }
+    });
+
+    // Project Status Chart
+    const statusCtx = document.getElementById('statusChart').getContext('2d');
+    new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Active', 'Completed', 'Paused'],
+            datasets: [{
+                data: [
+                    {{ client.projects | selectattr('status', 'equalto', 'active') | list | length }},
+                    {{ client.projects | selectattr('status', 'equalto', 'completed') | list | length }},
+                    {{ client.projects | selectattr('status', 'equalto', 'paused') | list | length }}
+                ],
+                backgroundColor: ['#10b981', '#6366f1', '#f59e0b'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+}
+
+function exportClientReport() {
+    // Placeholder for export functionality
+    showAlert('📊 Export functionality coming soon! This will generate a PDF report with all client analytics.', 'info');
+}
+
+function showAlert(message, type = 'info') {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 90px; right: 20px; z-index: 9999; min-width: 350px; border-radius: 15px;';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}
