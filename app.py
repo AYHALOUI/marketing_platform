@@ -54,21 +54,6 @@ def create_app():
     app.register_blueprint(clients_bp)  # ADD THIS
 
 
-    @app.route('/debug/users')
-    def debug_users():
-        from models import User
-        users = User.query.all()
-        user_list = []
-        for user in users:
-            user_list.append({
-                'id': user.id,
-                'username': user.username,
-                'email': user.email,
-                'role': user.role,
-                'created_at': str(user.created_at)
-            })
-        return {'users': user_list, 'count': len(users)}
-
 
     
     @app.route('/auth/login')
@@ -81,56 +66,6 @@ def create_app():
     from sqlalchemy import desc, func
     from datetime import datetime, timedelta
 
-    def get_dashboard_stats():
-        """Get overall statistics for the dashboard"""
-        stats = {
-            'clients': Client.query.count(),
-            'projects': Project.query.count(),
-            'tasks': Task.query.filter_by(status='pending').count(),  # Only pending tasks
-            'users': User.query.count()
-        }
-        return stats
-
-    def get_recent_projects(limit=5):
-        """Get recent projects ordered by creation date"""
-        recent_projects = Project.query.join(Client).order_by(desc(Project.created_at)).limit(limit).all()
-        return recent_projects
-
-    def get_recent_tasks(limit=10):
-        """Get recent tasks ordered by creation date"""
-        recent_tasks = Task.query.join(Project).join(User, Task.assigned_to_id == User.id, isouter=True).order_by(desc(Task.created_at)).limit(limit).all()
-        return recent_tasks
-
-    def get_project_stats():
-        """Get project statistics breakdown"""
-        project_stats = {
-            'total': Project.query.count(),
-            'active': Project.query.filter_by(status='active').count(),
-            'completed': Project.query.filter_by(status='completed').count(),
-            'pending': Project.query.filter_by(status='pending').count()
-        }
-        return project_stats
-
-    def get_task_stats():
-        """Get task statistics breakdown"""
-        task_stats = {
-            'total': Task.query.count(),
-            'pending': Task.query.filter_by(status='pending').count(),
-            'in_progress': Task.query.filter_by(status='in_progress').count(),
-            'completed': Task.query.filter_by(status='completed').count()
-        }
-        return task_stats
-
-    def get_tasks_by_priority():
-        """Get tasks grouped by priority"""
-        priority_stats = {
-            'high': Task.query.filter_by(priority='high').count(),
-            'medium': Task.query.filter_by(priority='medium').count(),
-            'low': Task.query.filter_by(priority='low').count()
-        }
-        return priority_stats
-
-    # Updated dashboard route
     @app.route('/dashboard')
     @login_required
     def dashboard():
@@ -140,40 +75,40 @@ def create_app():
         stats = get_dashboard_stats()
         recent_projects = get_recent_projects()
         recent_tasks = get_recent_tasks()
-        project_stats = get_project_stats()
-        task_stats = get_task_stats()
-        priority_stats = get_tasks_by_priority()
         
         return render_template('dashboard/index.html',
                             stats=stats,
                             recent_projects=recent_projects,
-                            recent_tasks=recent_tasks,
-                            project_stats=project_stats,
-                            task_stats=task_stats,
-                            priority_stats=priority_stats)
+                         recent_tasks=recent_tasks)
 
-    # Alternative minimal version if you want to start simple
-    @app.route('/dashboard')
-    @login_required
-    def dashboard_simple():
-        """Simplified dashboard route"""
-        
-        # Basic stats
+    # Helper functions for dashboard data
+    def get_dashboard_stats():
+        """Get overall statistics for the dashboard"""
         stats = {
             'clients': Client.query.count(),
             'projects': Project.query.count(),
             'tasks': Task.query.filter_by(status='pending').count(),
             'users': User.query.count()
         }
-        
-        # Recent items
-        recent_projects = Project.query.order_by(desc(Project.created_at)).limit(5).all()
-        recent_tasks = Task.query.order_by(desc(Task.created_at)).limit(10).all()
-        
-        return render_template('dashboard/index.html',
-                            stats=stats,
-                            recent_projects=recent_projects,
-                            recent_tasks=recent_tasks)
+        return stats
+
+    def get_recent_projects(limit=5):
+        """Get recent projects ordered by creation date"""
+        try:
+            recent_projects = Project.query.join(Client).order_by(desc(Project.created_at)).limit(limit).all()
+            return recent_projects
+        except Exception as e:
+            print(f"Error getting recent projects: {e}")
+            return Project.query.order_by(desc(Project.created_at)).limit(limit).all()
+
+    def get_recent_tasks(limit=10):
+        """Get recent tasks ordered by creation date"""
+        try:
+            recent_tasks = Task.query.join(Project).outerjoin(User, Task.assigned_to == User.username).order_by(desc(Task.created_at)).limit(limit).all()
+            return recent_tasks
+        except Exception as e:
+            print(f"Error getting recent tasks: {e}")
+            return Task.query.order_by(desc(Task.created_at)).limit(limit).all()
     
     @app.route('/project/<int:project_id>')
     @login_required

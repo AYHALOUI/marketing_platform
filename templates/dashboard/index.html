@@ -1,738 +1,644 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Marketing Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --primary-light: #818cf8;
+            --primary-dark: #4f46e5;
+            --secondary-color: #ec4899;
+            --accent-color: #06b6d4;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --light-bg: #f9fafb;
+            --dark-text: #1f2937;
+        }
 
-{% block title %}Dashboard - Marketing Platform{% endblock %}
+        body {
+            background-color: var(--light-bg);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--dark-text);
+        }
 
-{% block content %}
-<div class="container-fluid">
-    <!-- Welcome Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4 fade-in">
-        <div>
-            <h1 class="h3 mb-2" style="font-weight: 800; background: linear-gradient(135deg, #6366f1, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-                Welcome back, {{ current_user.username }}! ✨
-            </h1>
-            <p class="text-muted mb-0" style="font-size: 1.1rem;">Here's what's happening with your marketing campaigns today.</p>
-        </div>
-        {% if current_user.is_admin() %}
-        <div>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createProjectModal" style="box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);">
-                <i class="bi bi-plus-circle me-2"></i>New Project
+        .navbar {
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(20px);
+            border: none;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.25rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+        }
+
+        .navbar-nav .nav-link {
+            font-weight: 500;
+            color: #6b7280 !important;
+            padding: 0.75rem 1rem !important;
+            border-radius: 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin: 0 0.25rem;
+            text-decoration: none;
+        }
+
+        .navbar-nav .nav-link:hover, .navbar-nav .nav-link.active {
+            color: var(--primary-color) !important;
+            background-color: rgba(99, 102, 241, 0.1);
+            transform: translateY(-1px);
+            text-decoration: none;
+        }
+
+        .main-content {
+            padding: 2rem 0;
+        }
+
+        .page-header {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            border: 1px solid #e5e7eb;
+        }
+
+        .page-title {
+            font-weight: 800;
+            margin: 0;
+            font-size: 2.2rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-subtitle {
+            color: #6c757d;
+            margin: 0.5rem 0 0 0;
+            font-size: 1.1rem;
+        }
+
+        .stats-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid #e5e7eb;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stats-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient);
+        }
+
+        .stats-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+
+        .stats-card.clients { 
+            --gradient: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+        }
+        .stats-card.projects { 
+            --gradient: linear-gradient(135deg, var(--success-color), #34d399);
+        }
+        .stats-card.tasks { 
+            --gradient: linear-gradient(135deg, var(--warning-color), #fbbf24);
+        }
+        .stats-card.users { 
+            --gradient: linear-gradient(135deg, var(--secondary-color), #f472b6);
+        }
+
+        .stat-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            background: var(--gradient);
+            color: white;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin: 0;
+            color: #1f2937;
+            line-height: 1;
+        }
+
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin: 0.5rem 0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .section-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            border: 1px solid #e5e7eb;
+        }
+
+        .section-title {
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .table {
+            margin: 0;
+        }
+
+        .table thead th {
+            background-color: var(--light-bg);
+            border: none;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            color: var(--dark-text);
+            padding: 1rem;
+        }
+
+        .table tbody td {
+            padding: 1rem;
+            vertical-align: middle;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .table tbody tr:hover {
+            background-color: rgba(52, 152, 219, 0.05);
+        }
+
+        .status-badge {
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .status-active {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(52, 211, 153, 0.1));
+            color: var(--success-color);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .status-completed {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(129, 140, 248, 0.1));
+            color: var(--primary-color);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .status-pending {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(251, 191, 36, 0.1));
+            color: var(--warning-color);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-light)) !important;
+            border: none !important;
+            padding: 0.75rem 1.5rem !important;
+            border-radius: 12px !important;
+            font-weight: 600 !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            color: white !important;
+            text-decoration: none !important;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary-color)) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4) !important;
+            color: white !important;
+            text-decoration: none !important;
+        }
+
+        .btn-outline-primary {
+            border: 2px solid var(--primary-color) !important;
+            color: var(--primary-color) !important;
+            background: transparent !important;
+            padding: 0.6rem 1.5rem !important;
+            border-radius: 12px !important;
+            font-weight: 600 !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            text-decoration: none !important;
+        }
+
+        .btn-outline-primary:hover {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-light)) !important;
+            color: white !important;
+            border-color: transparent !important;
+            transform: translateY(-2px) !important;
+            text-decoration: none !important;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #6c757d;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .stats-card {
+                margin-bottom: 1rem;
+            }
+            
+            .page-header {
+                padding: 1.5rem;
+            }
+            
+            .section-card {
+                padding: 1.5rem;
+            }
+            
+            .quick-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-chart-line me-2"></i>
+                Marketing Platform
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
             </button>
-        </div>
-        {% endif %}
-    </div>
-
-    <!-- Debug Info Panel -->
-    <div class="card mb-4" style="border: 2px solid #f59e0b; border-radius: 12px;">
-        <div class="card-header py-2" style="background: #fef3c7; border-radius: 10px 10px 0 0;">
-            <h6 class="mb-0">🔍 Debug Information</h6>
-        </div>
-        <div class="card-body py-2">
-            <div class="row">
-                <div class="col-md-3">
-                    <small><strong>User:</strong> {{ current_user.username }} ({{ current_user.role }})</small>
-                </div>
-                <div class="col-md-3">
-                    <small><strong>API Status:</strong> <span id="apiStatus">Checking...</span></small>
-                </div>
-                <div class="col-md-3">
-                    <small><strong>Projects:</strong> <span id="projectsStatus">Waiting...</span></small>
-                </div>
-                <div class="col-md-3">
-                    <small><strong>Logs:</strong> <span id="consoleLogs">0 logs</span></small>
-                </div>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">
+                            <i class="fas fa-home me-1"></i>
+                            Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/dashboard">
+                            <i class="fas fa-tachometer-alt me-1"></i>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/api/clients/">
+                            <i class="fas fa-users me-1"></i>
+                            Clients
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showAlert('Projects view coming soon!', 'info')">
+                            <i class="fas fa-project-diagram me-1"></i>
+                            Projects
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="logout()">
+                            <i class="fas fa-sign-out-alt me-1"></i>
+                            Logout
+                        </a>
+                    </li>
+                </ul>
             </div>
         </div>
-    </div>
+    </nav>
 
-    <!-- Statistics Cards -->
-    <div class="stats-grid">
-        <div class="stat-card primary fade-in" style="animation-delay: 0.1s;">
-            <div class="d-flex align-items-center">
-                <div class="icon">
-                    <i class="bi bi-folder2"></i>
-                </div>
-                <div class="flex-grow-1">
-                    <h3 class="stat-number" id="totalProjects">0</h3>
-                    <p class="stat-label">Total Projects</p>
-                    <div class="stat-change positive">
-                        <i class="bi bi-arrow-up-circle"></i>
-                        <span id="totalChange">Loading...</span>
+    <!-- Main Content -->
+    <div class="container main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-tachometer-alt me-3"></i>
+                Dashboard
+            </h1>
+            <p class="page-subtitle">Overview of your marketing platform performance</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="row">
+            <div class="col-md-3 col-sm-6">
+                <div class="stats-card clients">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="stat-number text-primary">{{ stats.clients or 0 }}</p>
+                            <p class="stat-label">Total Clients</p>
+                        </div>
+                        <div class="stat-icon text-primary">
+                            <i class="fas fa-users"></i>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <div class="stat-card success fade-in" style="animation-delay: 0.2s;">
-            <div class="d-flex align-items-center">
-                <div class="icon">
-                    <i class="bi bi-lightning-charge"></i>
-                </div>
-                <div class="flex-grow-1">
-                    <h3 class="stat-number" id="activeProjects">0</h3>
-                    <p class="stat-label">Active Projects</p>
-                    <div class="stat-change positive">
-                        <i class="bi bi-arrow-up-circle"></i>
-                        <span id="activeChange">Loading...</span>
+            <div class="col-md-3 col-sm-6">
+                <div class="stats-card projects">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="stat-number text-success">{{ stats.projects or 0 }}</p>
+                            <p class="stat-label">Active Projects</p>
+                        </div>
+                        <div class="stat-icon text-success">
+                            <i class="fas fa-project-diagram"></i>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <div class="stat-card warning fade-in" style="animation-delay: 0.3s;">
-            <div class="d-flex align-items-center">
-                <div class="icon">
-                    <i class="bi bi-check-circle"></i>
-                </div>
-                <div class="flex-grow-1">
-                    <h3 class="stat-number" id="totalTasks">0</h3>
-                    <p class="stat-label">Total Tasks</p>
-                    <div class="stat-change">
-                        <i class="bi bi-dash-circle"></i>
-                        <span id="tasksChange">Loading...</span>
+            <div class="col-md-3 col-sm-6">
+                <div class="stats-card tasks">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="stat-number text-warning">{{ stats.tasks or 0 }}</p>
+                            <p class="stat-label">Pending Tasks</p>
+                        </div>
+                        <div class="stat-icon text-warning">
+                            <i class="fas fa-tasks"></i>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <div class="stat-card info fade-in" style="animation-delay: 0.4s;">
-            <div class="d-flex align-items-center">
-                <div class="icon">
-                    <i class="bi bi-trophy"></i>
-                </div>
-                <div class="flex-grow-1">
-                    <h3 class="stat-number" id="completedProjects">0</h3>
-                    <p class="stat-label">Completed</p>
-                    <div class="stat-change positive">
-                        <i class="bi bi-arrow-up-circle"></i>
-                        <span id="completedChange">Loading...</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Projects Section -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card border-0 fade-in" style="animation-delay: 0.5s;">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">
-                        <i class="bi bi-collection me-2" style="color: #6366f1;"></i>Your Projects
-                    </h5>
-                    <div>
-                        <button class="btn btn-outline-primary btn-sm me-2" id="refreshBtn" style="border-radius: 20px;">
-                            <i class="bi bi-arrow-clockwise me-1"></i>Refresh
-                        </button>
-                        <button class="btn btn-outline-warning btn-sm" id="testBtn" style="border-radius: 20px;">
-                            <i class="bi bi-bug me-1"></i>Test API
-                        </button>
-                    </div>
-                </div>
-                <div class="card-body" style="padding: 2rem;">
-                    <div id="projectsContainer">
-                        <div class="loading">
-                            <i class="bi bi-arrow-clockwise"></i>
-                            <p style="margin-top: 1rem; font-weight: 600;">Loading your awesome projects...</p>
+            <div class="col-md-3 col-sm-6">
+                <div class="stats-card users">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="stat-number text-danger">{{ stats.users or 0 }}</p>
+                            <p class="stat-label">Team Members</p>
+                        </div>
+                        <div class="stat-icon text-danger">
+                            <i class="fas fa-user-friends"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- Create Project Modal -->
-{% if current_user.is_admin() %}
-<div class="modal fade" id="createProjectModal" tabindex="-1" aria-labelledby="createProjectModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="createProjectModalLabel">
-                    <i class="bi bi-rocket-takeoff me-2"></i>Create New Project
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <!-- Quick Actions -->
+        <div class="section-card">
+            <h2 class="section-title">
+                <i class="fas fa-bolt"></i>
+                Quick Actions
+            </h2>
+            <div class="quick-actions">
+                <a href="/clients/new" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>
+                    Add New Client
+                </a>
+                <a href="/projects/new" class="btn btn-outline-primary">
+                    <i class="fas fa-project-diagram me-2"></i>
+                    Create Project
+                </a>
+                <a href="/tasks/new" class="btn btn-outline-primary">
+                    <i class="fas fa-tasks me-2"></i>
+                    Add Task
+                </a>
+                <a href="/reports" class="btn btn-outline-primary">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    View Reports
+                </a>
             </div>
-            <form id="createProjectForm">
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="projectName" class="form-label">
-                                    <i class="bi bi-tag me-1"></i>Project Name *
-                                </label>
-                                <input type="text" class="form-control" id="projectName" required 
-                                       placeholder="e.g., Summer Sale Campaign 2025">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="projectClient" class="form-label">
-                                    <i class="bi bi-building me-1"></i>Client *
-                                </label>
-                                <select class="form-select" id="projectClient" required>
-                                    <option value="">Select Client...</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                <label for="projectAssignedTo" class="form-label">
-                                    <i class="bi bi-person me-1"></i>Assign To *
-                                </label>
-                                <select class="form-select" id="projectAssignedTo" required>
-                                    <option value="">Select User...</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                <label for="projectStatus" class="form-label">
-                                    <i class="bi bi-gear me-1"></i>Status
-                                </label>
-                                <select class="form-select" id="projectStatus">
-                                    <option value="active">🚀 Active</option>
-                                    <option value="paused">⏸️ Paused</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="projectDescription" class="form-label">
-                            <i class="bi bi-textarea-t me-1"></i>Description
-                        </label>
-                        <textarea class="form-control" id="projectDescription" rows="3" 
-                                  placeholder="Describe your amazing marketing project..."></textarea>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="projectDueDate" class="form-label">
-                                    <i class="bi bi-calendar-event me-1"></i>Due Date
-                                </label>
-                                <input type="date" class="form-control" id="projectDueDate">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">
-                                    <i class="bi bi-info-circle me-1"></i>Quick Tips
-                                </label>
-                                <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(236, 72, 153, 0.1)); border-radius: 12px; padding: 1rem; font-size: 0.85rem;">
-                                    <div style="color: #6366f1; font-weight: 600;">💡 Pro Tips:</div>
-                                    <div style="color: #6b7280; margin-top: 0.5rem;">
-                                        • Assign to the right team member<br>
-                                        • Set realistic deadlines<br>
-                                        • Add detailed descriptions
+        </div>
+
+        <!-- Recent Projects -->
+        <div class="section-card">
+            <h2 class="section-title">
+                <i class="fas fa-clock"></i>
+                Recent Projects
+            </h2>
+            {% if recent_projects %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Project Name</th>
+                                <th>Client</th>
+                                <th>Status</th>
+                                <th>Due Date</th>
+                                <th>Progress</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for project in recent_projects %}
+                            <tr>
+                                <td>
+                                    <strong>{{ project.name }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ project.description[:50] }}...</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark">{{ project.client.name }}</span>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-{{ project.status.lower() }}">
+                                        {{ project.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if project.due_date %}
+                                        {{ project.due_date.strftime('%Y-%m-%d') }}
+                                    {% else %}
+                                        <span class="text-muted">No due date</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar" role="progressbar" 
+                                             style="width: {{ project.progress or 0 }}%"></div>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                                    <small class="text-muted">{{ project.progress or 0 }}%</small>
+                                </td>
+                                <td>
+                                    <a href="/projects/{{ project.id }}" class="btn btn-sm btn-outline-primary">
+                                        View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x-circle me-1"></i>Cancel
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-rocket-takeoff me-1"></i>Create Project
-                    </button>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-project-diagram"></i>
+                    <h4>No Recent Projects</h4>
+                    <p>Start by creating your first project to see it here.</p>
+                    <a href="/projects/new" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>
+                        Create Project
+                    </a>
                 </div>
-            </form>
+            {% endif %}
+        </div>
+
+        <!-- Recent Tasks -->
+        <div class="section-card">
+            <h2 class="section-title">
+                <i class="fas fa-check-circle"></i>
+                Recent Tasks
+            </h2>
+            {% if recent_tasks %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Task Name</th>
+                                <th>Project</th>
+                                <th>Assigned To</th>
+                                <th>Status</th>
+                                <th>Priority</th>
+                                <th>Due Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for task in recent_tasks %}
+                            <tr>
+                                <td>
+                                    <strong>{{ task.name }}</strong>
+                                    {% if task.description %}
+                                        <br>
+                                        <small class="text-muted">{{ task.description[:40] }}...</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark">{{ task.project.name }}</span>
+                                </td>
+                                <td>
+                                    {% if task.assigned_to %}
+                                        {{ task.assigned_to.username }}
+                                    {% else %}
+                                        <span class="text-muted">Unassigned</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="status-badge status-{{ task.status.lower() }}">
+                                        {{ task.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if task.priority == 'high' %}
+                                        <span class="badge bg-danger">High</span>
+                                    {% elif task.priority == 'medium' %}
+                                        <span class="badge bg-warning">Medium</span>
+                                    {% else %}
+                                        <span class="badge bg-success">Low</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if task.due_date %}
+                                        {{ task.due_date.strftime('%Y-%m-%d') }}
+                                    {% else %}
+                                        <span class="text-muted">No due date</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-tasks"></i>
+                    <h4>No Recent Tasks</h4>
+                    <p>Tasks will appear here once you create them.</p>
+                    <a href="/tasks/new" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>
+                        Add Task
+                    </a>
+                </div>
+            {% endif %}
         </div>
     </div>
-</div>
-{% endif %}
 
-<script>
-// Global variables
-let currentUser = null;
-let projects = [];
-let debugLogs = [];
-
-// Debug logging function
-function debugLog(message) {
-    const timestamp = new Date().toLocaleTimeString();
-    const logMessage = `[${timestamp}] ${message}`;
-    debugLogs.push(logMessage);
-    console.log(logMessage);
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     
-    // Update debug display
-    const debugElement = document.getElementById('consoleLogs');
-    if (debugElement) {
-        debugElement.textContent = `${debugLogs.length} logs`;
-    }
-}
-
-async function loadClientsForProject() {
-    try {
-        const response = await fetch('/api/clients/');
-        const data = await response.json();
-        
-        console.log('API Response:', data); // ADD THIS DEBUG LINE
-        
-        const select = document.getElementById('projectClient');
-        if (select && data.clients) {
-            select.innerHTML = '<option value="">Select Client...</option>';
-            data.clients.forEach(client => {
-                console.log('Client:', client); // ADD THIS DEBUG LINE
-                select.innerHTML += `<option value="${client.id}">${client.name} - ${client.company}</option>`;
-            });
-        }
-    } catch (error) {
-        console.error('Error loading clients:', error);
-    }
-}
-
-// Initialize when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    debugLog('🚀 Dashboard initializing...');
-    
-    // Set up event listeners
-    const refreshBtn = document.getElementById('refreshBtn');
-    const testBtn = document.getElementById('testBtn');
-    const createForm = document.getElementById('createProjectForm');
-    const modal = document.getElementById('createProjectModal');
-    
-    if (refreshBtn) {
-        refreshBtn.addEventListener('click', loadProjects);
-    }
-    
-    if (testBtn) {
-        testBtn.addEventListener('click', testAPI);
-    }
-    
-    if (createForm) {
-        createForm.addEventListener('submit', createProject);
-    }
-    
-    // Load users and clients when modal opens
-    if (modal) {
-        modal.addEventListener('show.bs.modal', function() {
-            loadUsers();
-            loadClientsForProject();
-        });
-    }
-    
-    // Initialize dashboard
-    initializeDashboard();
-});
-
-async function initializeDashboard() {
-    try {
-        debugLog('📋 Checking authentication...');
-        
-        // Update debug status
-        updateDebugStatus('apiStatus', 'Checking...');
-        updateDebugStatus('projectsStatus', 'Waiting...');
-        
-        // Check authentication
-        const response = await fetch('/auth/status');
-        const data = await response.json();
-        
-        debugLog(`🔐 Auth response: ${JSON.stringify(data)}`);
-        
-        if (!data.authenticated) {
-            debugLog('❌ User not authenticated, redirecting...');
-            updateDebugStatus('apiStatus', '❌ Not authenticated');
-            window.location.href = '/auth/login';
-            return;
-        }
-        
-        currentUser = data.user;
-        updateDebugStatus('apiStatus', `✅ ${currentUser.username}`);
-        debugLog(`✅ User authenticated: ${currentUser.username} (${currentUser.role})`);
-        
-        // Load projects
-        await loadProjects();
-        
-    } catch (error) {
-        debugLog(`❌ Dashboard initialization error: ${error.message}`);
-        updateDebugStatus('apiStatus', `❌ Error: ${error.message}`);
-        showErrorInContainer('Dashboard initialization failed: ' + error.message);
-    }
-}
-
-async function loadProjects() {
-    try {
-        debugLog('📦 Loading projects...');
-        updateDebugStatus('projectsStatus', 'Loading...');
-        
-        const response = await fetch('/api/projects/');
-        debugLog(`📡 Projects API response status: ${response.status}`);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        debugLog(`📊 Projects data received: ${data.projects ? data.projects.length : 0} projects`);
-        
-        projects = data.projects || [];
-        updateDebugStatus('projectsStatus', `✅ ${projects.length} projects`);
-        
-        displayProjects(projects);
-        updateStats(projects);
-        
-    } catch (error) {
-        debugLog(`❌ Error loading projects: ${error.message}`);
-        updateDebugStatus('projectsStatus', `❌ ${error.message}`);
-        showErrorInContainer('Failed to load projects: ' + error.message);
-    }
-}
-
-async function testAPI() {
-    debugLog('🧪 Testing API endpoints...');
-    
-    const tests = [
-        { name: 'Auth Status', url: '/auth/status' },
-        { name: 'Projects API', url: '/api/projects/' },
-        { name: 'Debug Users', url: '/debug/users' }
-    ];
-    
-    for (const test of tests) {
-        try {
-            const response = await fetch(test.url);
-            const data = await response.json();
-            debugLog(`✅ ${test.name}: ${response.status} - ${JSON.stringify(data).substring(0, 100)}...`);
-        } catch (error) {
-            debugLog(`❌ ${test.name}: ${error.message}`);
-        }
-    }
-    
-    showAlert('API test completed! Check the console for results.', 'info');
-}
-
-function displayProjects(projects) {
-    const container = document.getElementById('projectsContainer');
-    if (!container) {
-        debugLog('❌ Projects container not found');
-        return;
-    }
-    
-    debugLog(`🎨 Displaying ${projects.length} projects`);
-    
-    if (!projects || projects.length === 0) {
-        container.innerHTML = `
-            <div class="text-center py-5">
-                <div style="font-size: 4rem; margin-bottom: 1rem;">🚀</div>
-                <h5 style="color: #6b7280; font-weight: 700;">Ready to Launch?</h5>
-                <p style="color: #9ca3af; font-size: 1.1rem; margin-bottom: 2rem;">
-                    No projects found. ${currentUser && currentUser.role === 'admin' ? 'Create your first project!' : 'Contact your admin to create projects.'}
-                </p>
-                ${currentUser && currentUser.role === 'admin' ? `
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createProjectModal" style="border-radius: 25px; padding: 0.75rem 2rem;">
-                        <i class="bi bi-rocket-takeoff me-2"></i>Create Your First Project
-                    </button>
-                ` : ''}
-            </div>
-        `;
-        return;
-    }
-    
-    const projectsHTML = projects.map((project, index) => {
-        const statusEmoji = getStatusEmoji(project.status);
-        const progressClass = getProgressClass(project.progress || 0);
-        const timeAgo = getTimeAgo(project.created_at);
-        
-        return `
-            <div class="project-card slide-up" data-status="${project.status}" style="animation-delay: ${0.1 * index}s;">
-                <div class="project-header">
-                    <h6 class="project-title">${escapeHtml(project.name || 'Unnamed Project')}</h6>
-                    <span class="project-status ${project.status || 'active'}">${statusEmoji} ${(project.status || 'active').toUpperCase()}</span>
-                </div>
-                
-                <p class="project-description">${escapeHtml(project.description) || 'No description provided'}</p>
-                
-                <div class="project-meta">
-                    <span style="display: flex; align-items: center; gap: 0.5rem;">
-                        <i class="bi bi-person-circle" style="color: #6366f1;"></i>
-                        <span style="font-weight: 600;">${escapeHtml(project.owner || 'Unknown')}</span>
-                    </span>
-                    <span style="display: flex; align-items: center; gap: 0.5rem;">
-                        <i class="bi bi-calendar3" style="color: #ec4899;"></i>
-                        <span>${project.due_date ? formatDate(project.due_date) : 'No due date'}</span>
-                    </span>
-                </div>
-                
-                <div class="progress-container">
-                    <div class="progress-label">
-                        <span style="font-weight: 700; color: #374151;">Progress</span>
-                        <span style="font-weight: 800; color: #6366f1;">${project.progress || 0}%</span>
-                    </div>
-                    <div class="progress">
-                        <div class="progress-bar ${progressClass}" style="width: ${project.progress || 0}%"></div>
-                    </div>
-                </div>
-                
-                <div class="d-flex justify-content-between align-items-center mt-3">
-                    <div style="display: flex; align-items: center; gap: 1rem;">
-                        <small style="color: #6b7280; font-weight: 600; display: flex; align-items: center; gap: 0.25rem;">
-                            <i class="bi bi-check2-square" style="color: #10b981;"></i>${project.task_count || 0} tasks
-                        </small>
-                        <small style="color: #6b7280; font-weight: 600;">
-                            Created ${timeAgo}
-                        </small>
-                    </div>
-                    <div class="project-actions">
-                        <button class="btn btn-outline-primary btn-sm" onclick="window.location.href='/project/${project.id}'" style="border-radius: 20px;">
-                            <i class="bi bi-eye me-1"></i>View Details
-                        </button>
-                        ${currentUser && currentUser.role === 'admin' ? `
-                            <button class="btn btn-outline-danger btn-sm" onclick="deleteProject(${project.id}, '${escapeHtml(project.name || 'Project')}')" style="border-radius: 20px;">
-                                <i class="bi bi-trash me-1"></i>Delete
-                            </button>
-                        ` : ''}
-                    </div>
-                </div>
-            </div>
-        `;
-    }).join('');
-    container.innerHTML = `<div class="projects-grid">${projectsHTML}</div>`;
-}
-
-function showErrorInContainer(message) {
-    const container = document.getElementById('projectsContainer');
-    if (container) {
-        container.innerHTML = `
-            <div class="text-center py-5">
-                <div style="font-size: 3rem; margin-bottom: 1rem; color: #ef4444;">⚠️</div>
-                <h5 style="color: #ef4444;">Error Loading Projects</h5>
-                <p style="color: #6b7280; margin-bottom: 2rem;">${message}</p>
-                <button class="btn btn-primary" onclick="loadProjects()">
-                    <i class="bi bi-arrow-clockwise me-1"></i>Try Again
-                </button>
-                <button class="btn btn-outline-warning ms-2" onclick="testAPI()">
-                    <i class="bi bi-bug me-1"></i>Test API
-                </button>
-            </div>
-        `;
-    }
-}
-
-function updateStats(projects) {
-    const total = projects.length;
-    const active = projects.filter(p => p.status === 'active').length;
-    const completed = projects.filter(p => p.status === 'completed').length;
-    const totalTasks = projects.reduce((sum, p) => sum + (p.task_count || 0), 0);
-    
-    document.getElementById('totalProjects').textContent = total;
-    document.getElementById('activeProjects').textContent = active;
-    document.getElementById('completedProjects').textContent = completed;
-    document.getElementById('totalTasks').textContent = totalTasks;
-    
-    // Update change indicators
-    document.getElementById('totalChange').textContent = total > 0 ? `${total} total` : 'No projects';
-    document.getElementById('activeChange').textContent = active > 0 ? `${active} active` : 'None active';
-    document.getElementById('tasksChange').textContent = totalTasks > 0 ? `${totalTasks} tasks` : 'No tasks';
-    document.getElementById('completedChange').textContent = completed > 0 ? `${completed} done` : 'None done';
-    
-    debugLog(`📊 Stats updated: ${total} total, ${active} active, ${completed} completed, ${totalTasks} tasks`);
-}
-
-// Load users for assignment dropdown
-async function loadUsers() {
-    try {
-        const response = await fetch('/debug/users');
-        const data = await response.json();
-        
-        const select = document.getElementById('projectAssignedTo');
-        if (select && data.users) {
-            select.innerHTML = '<option value="">Select User...</option>';
-            data.users.forEach(user => {
-                select.innerHTML += `<option value="${user.id}">${user.username} (${user.role})</option>`;
-            });
-        }
-    } catch (error) {
-        console.error('Error loading users:', error);
-    }
-}
-
-async function createProject(event) {
-    event.preventDefault();
-    
-    const submitBtn = event.target.querySelector('button[type="submit"]');
-    if (!submitBtn) return;
-    
-    const originalText = submitBtn.innerHTML;
-    submitBtn.innerHTML = '<i class="bi bi-arrow-clockwise spin me-1"></i> Creating magic...';
-    submitBtn.disabled = true;
-    
-    try {
-        const projectData = {
-            name: document.getElementById('projectName').value.trim(),
-            description: document.getElementById('projectDescription').value.trim(),
-            due_date: document.getElementById('projectDueDate').value || null,
-            status: document.getElementById('projectStatus').value,
-            assigned_to: document.getElementById('projectAssignedTo').value,
-            client_id: document.getElementById('projectClient').value  // ADD THIS LINE
-        };
-        
-        if (!projectData.assigned_to) {
-            throw new Error('Please assign the project to a user');
+    <!-- Dashboard JavaScript -->
+    <script>
+        // Logout function
+        async function logout() {
+            try {
+                await fetch('/auth/logout', { method: 'POST' });
+                showAlert('Logged out successfully', 'success');
+                setTimeout(() => {
+                    window.location.href = '/auth/login';
+                }, 1000);
+            } catch (error) {
+                window.location.href = '/auth/login';
+            }
         }
 
-        if (!projectData.client_id) {
-            throw new Error('Please select a client');
-        }
-        
-        debugLog(`📝 Creating project: ${JSON.stringify(projectData)}`);
-        
-        const response = await fetch('/api/projects/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(projectData)
-        });
-        
-        const data = await response.json();
-        debugLog(`✅ Project created: ${JSON.stringify(data)}`);
-        
-        if (response.ok) {
-            showAlert(`🎉 Project "${data.project.name}" created and assigned successfully!`, 'success');
+        // Show alert function
+        function showAlert(message, type = 'info', duration = 5000) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            alertDiv.innerHTML = `
+                <i class="fas fa-info-circle me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alertDiv);
             
-            // Close modal
-            const modalElement = document.getElementById('createProjectModal');
-            const modal = bootstrap.Modal.getInstance(modalElement);
-            if (modal) modal.hide();
-            
-            // Reset form
-            document.getElementById('createProjectForm').reset();
-            
-            // Reload projects
-            await loadProjects();
-            
-        } else {
-            throw new Error(data.error || 'Failed to create project');
+            // Auto remove
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, duration);
         }
-        
-    } catch (error) {
-        debugLog(`❌ Error creating project: ${error.message}`);
-        showAlert('Error creating project: ' + error.message, 'danger');
-    } finally {
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
-    }
-}
-
-async function deleteProject(projectId, projectName) {
-    if (!confirm(`🗑️ Are you sure you want to delete "${projectName}"?`)) return;
-    
-    try {
-        
-        const response = await fetch(`/api/projects/${projectId}`, {
-            method: 'DELETE'
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            showAlert('🗑️ Project deleted successfully!', 'success');
-            await loadProjects();
-        } else {
-            throw new Error(data.error || 'Failed to delete project');
-        }
-        
-    } catch (error) {
-        debugLog(`❌ Error deleting project: ${error.message}`);
-        showAlert('Error deleting project: ' + error.message, 'danger');
-    }
-}
-
-function viewProject(projectId) {
-    debugLog(`👁️ Viewing project: ${projectId}`);
-    showAlert(`🔍 Project details view coming soon! Project ID: ${projectId}`, 'info');
-}
-
-// Utility functions
-function updateDebugStatus(elementId, message) {
-    const element = document.getElementById(elementId);
-    if (element) {
-        element.textContent = message;
-    }
-}
-
-function getProgressClass(progress) {
-    if (progress >= 80) return 'bg-success';
-    if (progress >= 50) return 'bg-warning';
-    return 'bg-danger';
-}
-
-function getStatusEmoji(status) {
-    const emojis = {
-        'active': '🚀',
-        'completed': '✅',
-        'paused': '⏸️',
-        'cancelled': '❌'
-    };
-    return emojis[status] || '📋';
-}
-
-function getTimeAgo(dateString) {
-    try {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffTime = Math.abs(now - date);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        
-        if (diffDays === 1) return 'yesterday';
-        if (diffDays < 7) return `${diffDays} days ago`;
-        if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
-        return `${Math.ceil(diffDays / 30)} months ago`;
-    } catch (error) {
-        return 'recently';
-    }
-}
-
-function formatDate(dateString) {
-    try {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    } catch (error) {
-        return dateString;
-    }
-}
-
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function showAlert(message, type = 'info') {
-    const existingAlerts = document.querySelectorAll('.alert.position-fixed');
-    existingAlerts.forEach(alert => alert.remove());
-    
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-    alertDiv.style.cssText = 'top: 90px; right: 20px; z-index: 9999; min-width: 350px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);';
-    alertDiv.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    
-    document.body.appendChild(alertDiv);
-    
-    setTimeout(() => {
-        if (alertDiv.parentNode) {
-            alertDiv.remove();
-        }
-    }, 4000);
-}
-
-
-
-// Error handlers
-window.addEventListener('error', function(event) {
-    debugLog(`💥 Global error: ${event.error.message}`);
-});
-
-window.addEventListener('unhandledrejection', function(event) {
-    debugLog(`💥 Unhandled rejection: ${event.reason}`);
-});
-</script>
-{% endblock %}
+    </script>
+</body>
+</html>
