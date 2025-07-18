@@ -77,10 +77,103 @@ def create_app():
             return redirect(url_for('dashboard'))
         return render_template('auth/login.html')
     
+    from models import User, Client, Project, Task
+    from sqlalchemy import desc, func
+    from datetime import datetime, timedelta
+
+    def get_dashboard_stats():
+        """Get overall statistics for the dashboard"""
+        stats = {
+            'clients': Client.query.count(),
+            'projects': Project.query.count(),
+            'tasks': Task.query.filter_by(status='pending').count(),  # Only pending tasks
+            'users': User.query.count()
+        }
+        return stats
+
+    def get_recent_projects(limit=5):
+        """Get recent projects ordered by creation date"""
+        recent_projects = Project.query.join(Client).order_by(desc(Project.created_at)).limit(limit).all()
+        return recent_projects
+
+    def get_recent_tasks(limit=10):
+        """Get recent tasks ordered by creation date"""
+        recent_tasks = Task.query.join(Project).join(User, Task.assigned_to_id == User.id, isouter=True).order_by(desc(Task.created_at)).limit(limit).all()
+        return recent_tasks
+
+    def get_project_stats():
+        """Get project statistics breakdown"""
+        project_stats = {
+            'total': Project.query.count(),
+            'active': Project.query.filter_by(status='active').count(),
+            'completed': Project.query.filter_by(status='completed').count(),
+            'pending': Project.query.filter_by(status='pending').count()
+        }
+        return project_stats
+
+    def get_task_stats():
+        """Get task statistics breakdown"""
+        task_stats = {
+            'total': Task.query.count(),
+            'pending': Task.query.filter_by(status='pending').count(),
+            'in_progress': Task.query.filter_by(status='in_progress').count(),
+            'completed': Task.query.filter_by(status='completed').count()
+        }
+        return task_stats
+
+    def get_tasks_by_priority():
+        """Get tasks grouped by priority"""
+        priority_stats = {
+            'high': Task.query.filter_by(priority='high').count(),
+            'medium': Task.query.filter_by(priority='medium').count(),
+            'low': Task.query.filter_by(priority='low').count()
+        }
+        return priority_stats
+
+    # Updated dashboard route
     @app.route('/dashboard')
     @login_required
     def dashboard():
-        return render_template('dashboard/index.html')
+        """Dashboard with comprehensive statistics and recent items"""
+        
+        # Get all the data for the dashboard
+        stats = get_dashboard_stats()
+        recent_projects = get_recent_projects()
+        recent_tasks = get_recent_tasks()
+        project_stats = get_project_stats()
+        task_stats = get_task_stats()
+        priority_stats = get_tasks_by_priority()
+        
+        return render_template('dashboard/index.html',
+                            stats=stats,
+                            recent_projects=recent_projects,
+                            recent_tasks=recent_tasks,
+                            project_stats=project_stats,
+                            task_stats=task_stats,
+                            priority_stats=priority_stats)
+
+    # Alternative minimal version if you want to start simple
+    @app.route('/dashboard')
+    @login_required
+    def dashboard_simple():
+        """Simplified dashboard route"""
+        
+        # Basic stats
+        stats = {
+            'clients': Client.query.count(),
+            'projects': Project.query.count(),
+            'tasks': Task.query.filter_by(status='pending').count(),
+            'users': User.query.count()
+        }
+        
+        # Recent items
+        recent_projects = Project.query.order_by(desc(Project.created_at)).limit(5).all()
+        recent_tasks = Task.query.order_by(desc(Task.created_at)).limit(10).all()
+        
+        return render_template('dashboard/index.html',
+                            stats=stats,
+                            recent_projects=recent_projects,
+                            recent_tasks=recent_tasks)
     
     @app.route('/project/<int:project_id>')
     @login_required
