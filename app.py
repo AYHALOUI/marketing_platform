@@ -40,21 +40,18 @@ def create_app():
     from routes.auth import auth_bp
     from routes.projects import projects_bp
     from routes.tasks import tasks_bp
-    from routes.homepage import homepage_bp  # ADD THIS
-    from routes.clients import clients_bp  # ADD THIS
+    from routes.homepage import homepage_bp
+    from routes.clients import clients_bp
+    from routes.n8n_webhooks import n8n_bp
 
 
-    from routes.auth import auth_bp
-    from routes.projects import projects_bp
-    from routes.tasks import tasks_bp
     app.register_blueprint(auth_bp)
     app.register_blueprint(projects_bp)
     app.register_blueprint(tasks_bp)
-    app.register_blueprint(homepage_bp)  # ADD THIS
-    app.register_blueprint(clients_bp)  # ADD THIS
+    app.register_blueprint(homepage_bp)
+    app.register_blueprint(clients_bp)
 
-
-
+    app.register_blueprint(n8n_bp) 
     
     @app.route('/auth/login')
     def login():
@@ -79,7 +76,7 @@ def create_app():
         return render_template('dashboard/index.html',
                             stats=stats,
                             recent_projects=recent_projects,
-                         recent_tasks=recent_tasks)
+                            recent_tasks=recent_tasks)
 
     # Helper functions for dashboard data
     def get_dashboard_stats():
@@ -115,11 +112,7 @@ def create_app():
     def project_details(project_id):
         return render_template('project/details.html', project_id=project_id)
     
-    
-    # Create database tables
-    with app.app_context():
-        db.create_all()
-
+    # Debug route for user information
     @app.route('/debug/users')
     def debug_users():
         from models import User
@@ -134,6 +127,10 @@ def create_app():
                 'created_at': str(user.created_at)
             })
         return {'users': user_list, 'count': len(users)}
+    
+    # Create database tables
+    with app.app_context():
+        db.create_all()
     
     return app
 

@@ -2,6 +2,8 @@ from flask import Blueprint, request, jsonify
 from flask_login import login_required, current_user
 from models import Client, db
 from flask import Blueprint, request, jsonify, render_template
+from services.n8n_service import n8n_service
+
 
 
 clients_bp = Blueprint('clients', __name__, url_prefix='/api/clients')
@@ -9,7 +11,7 @@ clients_bp = Blueprint('clients', __name__, url_prefix='/api/clients')
 @clients_bp.route('/', methods=['POST'])
 @login_required
 def create_client():
-    """Create a new client (admin only)"""
+    """Create a new client (admin only) with N8N integration"""
     if not current_user.is_admin():
         return jsonify({'error': 'Only admins can create clients'}), 403
     
@@ -28,6 +30,23 @@ def create_client():
         
         db.session.add(client)
         db.session.commit()
+        
+        # 🚀 TRIGGER N8N WORKFLOW FOR NEW CLIENT
+        client_data = {
+            'id': client.id,
+            'name': client.name,
+            'company': client.company,
+            'email': client.email,
+            'sector': client.sector
+        }
+        
+        # Trigger N8N workflow asynchronously
+        try:
+            n8n_service.client_created(client_data)
+            print(f"🤖 N8N workflow triggered for new client: {client.name}")
+        except Exception as n8n_error:
+            print(f"⚠️ N8N trigger failed for client {client.name}: {str(n8n_error)}")
+            # Don't fail the client creation if N8N fails
         
         return jsonify({
             'message': 'Client created successfully',

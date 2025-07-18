@@ -336,13 +336,13 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/api/clients/">
+                        <a class="nav-link" href="/">
                             <i class="fas fa-users me-1"></i>
                             Clients
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="showAlert('Projects view coming soon!', 'info')">
+                        <a class="nav-link" href="#" onclick="showProjectsView()">
                             <i class="fas fa-project-diagram me-1"></i>
                             Projects
                         </a>
@@ -432,22 +432,22 @@
                 Quick Actions
             </h2>
             <div class="quick-actions">
-                <a href="/clients/new" class="btn btn-primary">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createClientModal">
                     <i class="fas fa-plus me-2"></i>
                     Add New Client
-                </a>
-                <a href="/projects/new" class="btn btn-outline-primary">
+                </button>
+                <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createProjectModal">
                     <i class="fas fa-project-diagram me-2"></i>
                     Create Project
-                </a>
-                <a href="/tasks/new" class="btn btn-outline-primary">
+                </button>
+                <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addTaskModal">
                     <i class="fas fa-tasks me-2"></i>
                     Add Task
-                </a>
-                <a href="/reports" class="btn btn-outline-primary">
+                </button>
+                <button class="btn btn-outline-primary" onclick="showAlert('📊 Reports feature coming soon!', 'info')">
                     <i class="fas fa-chart-bar me-2"></i>
                     View Reports
-                </a>
+                </button>
             </div>
         </div>
 
@@ -476,10 +476,14 @@
                                 <td>
                                     <strong>{{ project.name }}</strong>
                                     <br>
-                                    <small class="text-muted">{{ project.description[:50] }}...</small>
+                                    <small class="text-muted">{{ project.description[:50] }}{% if project.description|length > 50 %}...{% endif %}</small>
                                 </td>
                                 <td>
-                                    <span class="badge bg-light text-dark">{{ project.client.name }}</span>
+                                    {% if project.client %}
+                                        <span class="badge bg-light text-dark">{{ project.client.name }}</span>
+                                    {% else %}
+                                        <span class="text-muted">No client</span>
+                                    {% endif %}
                                 </td>
                                 <td>
                                     <span class="status-badge status-{{ project.status.lower() }}">
@@ -496,12 +500,12 @@
                                 <td>
                                     <div class="progress" style="height: 6px;">
                                         <div class="progress-bar" role="progressbar" 
-                                             style="width: {{ project.progress or 0 }}%"></div>
+                                             style="width: {{ project.get_progress() or 0 }}%"></div>
                                     </div>
-                                    <small class="text-muted">{{ project.progress or 0 }}%</small>
+                                    <small class="text-muted">{{ project.get_progress() or 0 }}%</small>
                                 </td>
                                 <td>
-                                    <a href="/projects/{{ project.id }}" class="btn btn-sm btn-outline-primary">
+                                    <a href="/project/{{ project.id }}" class="btn btn-sm btn-outline-primary">
                                         View
                                     </a>
                                 </td>
@@ -515,10 +519,10 @@
                     <i class="fas fa-project-diagram"></i>
                     <h4>No Recent Projects</h4>
                     <p>Start by creating your first project to see it here.</p>
-                    <a href="/projects/new" class="btn btn-primary">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createProjectModal">
                         <i class="fas fa-plus me-2"></i>
                         Create Project
-                    </a>
+                    </button>
                 </div>
             {% endif %}
         </div>
@@ -538,7 +542,6 @@
                                 <th>Project</th>
                                 <th>Assigned To</th>
                                 <th>Status</th>
-                                <th>Priority</th>
                                 <th>Due Date</th>
                             </tr>
                         </thead>
@@ -546,10 +549,10 @@
                             {% for task in recent_tasks %}
                             <tr>
                                 <td>
-                                    <strong>{{ task.name }}</strong>
+                                    <strong>{{ task.title }}</strong>
                                     {% if task.description %}
                                         <br>
-                                        <small class="text-muted">{{ task.description[:40] }}...</small>
+                                        <small class="text-muted">{{ task.description[:40] }}{% if task.description|length > 40 %}...{% endif %}</small>
                                     {% endif %}
                                 </td>
                                 <td>
@@ -557,24 +560,15 @@
                                 </td>
                                 <td>
                                     {% if task.assigned_to %}
-                                        {{ task.assigned_to.username }}
+                                        {{ task.assigned_to }}
                                     {% else %}
                                         <span class="text-muted">Unassigned</span>
                                     {% endif %}
                                 </td>
                                 <td>
                                     <span class="status-badge status-{{ task.status.lower() }}">
-                                        {{ task.status }}
+                                        {{ task.status.replace('_', ' ') }}
                                     </span>
-                                </td>
-                                <td>
-                                    {% if task.priority == 'high' %}
-                                        <span class="badge bg-danger">High</span>
-                                    {% elif task.priority == 'medium' %}
-                                        <span class="badge bg-warning">Medium</span>
-                                    {% else %}
-                                        <span class="badge bg-success">Low</span>
-                                    {% endif %}
                                 </td>
                                 <td>
                                     {% if task.due_date %}
@@ -593,12 +587,258 @@
                     <i class="fas fa-tasks"></i>
                     <h4>No Recent Tasks</h4>
                     <p>Tasks will appear here once you create them.</p>
-                    <a href="/tasks/new" class="btn btn-primary">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTaskModal">
                         <i class="fas fa-plus me-2"></i>
                         Add Task
-                    </a>
+                    </button>
                 </div>
             {% endif %}
+        </div>
+    </div>
+
+    <!-- Create Client Modal -->
+    <div class="modal fade" id="createClientModal" tabindex="-1" aria-labelledby="createClientModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createClientModalLabel">
+                        <i class="fas fa-plus me-2"></i>Add New Client
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="createClientForm">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="clientName" class="form-label">
+                                        <i class="fas fa-user me-1"></i>Client Name *
+                                    </label>
+                                    <input type="text" class="form-control" id="clientName" required placeholder="e.g., Nike">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="clientCompany" class="form-label">
+                                        <i class="fas fa-building me-1"></i>Company
+                                    </label>
+                                    <input type="text" class="form-control" id="clientCompany" placeholder="e.g., Nike Inc.">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="clientEmail" class="form-label">
+                                        <i class="fas fa-envelope me-1"></i>Email
+                                    </label>
+                                    <input type="email" class="form-control" id="clientEmail" placeholder="contact@client.com">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="clientSector" class="form-label">
+                                        <i class="fas fa-tag me-1"></i>Sector
+                                    </label>
+                                    <select class="form-select" id="clientSector">
+                                        <option value="">Select Sector</option>
+                                        <option value="Technology">Technology</option>
+                                        <option value="Healthcare">Healthcare</option>
+                                        <option value="Finance">Finance</option>
+                                        <option value="Retail">Retail</option>
+                                        <option value="Manufacturing">Manufacturing</option>
+                                        <option value="Education">Education</option>
+                                        <option value="Entertainment">Entertainment</option>
+                                        <option value="Food & Beverage">Food & Beverage</option>
+                                        <option value="Sports & Fashion">Sports & Fashion</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Add Client
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Project Modal -->
+    <div class="modal fade" id="createProjectModal" tabindex="-1" aria-labelledby="createProjectModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createProjectModalLabel">
+                        <i class="fas fa-project-diagram me-2"></i>Create Project
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="createProjectForm">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="projectName" class="form-label">
+                                        <i class="fas fa-tag me-1"></i>Project Name *
+                                    </label>
+                                    <input type="text" class="form-control" id="projectName" required placeholder="e.g., Summer Marketing Campaign">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="projectStatus" class="form-label">
+                                        <i class="fas fa-gear me-1"></i>Status
+                                    </label>
+                                    <select class="form-select" id="projectStatus">
+                                        <option value="active">Active</option>
+                                        <option value="completed">Completed</option>
+                                        <option value="paused">Paused</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="projectDescription" class="form-label">
+                                <i class="fas fa-align-left me-1"></i>Description
+                            </label>
+                            <textarea class="form-control" id="projectDescription" rows="3" placeholder="Describe the project goals and objectives..."></textarea>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="projectClient" class="form-label">
+                                        <i class="fas fa-building me-1"></i>Client
+                                    </label>
+                                    <select class="form-select" id="projectClient">
+                                        <option value="">Select Client...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="projectAssignedTo" class="form-label">
+                                        <i class="fas fa-user me-1"></i>Assign To *
+                                    </label>
+                                    <select class="form-select" id="projectAssignedTo" required>
+                                        <option value="">Select User...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="projectDueDate" class="form-label">
+                                        <i class="fas fa-calendar me-1"></i>Due Date
+                                    </label>
+                                    <input type="date" class="form-control" id="projectDueDate">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Create Project
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Task Modal -->
+    <div class="modal fade" id="addTaskModal" tabindex="-1" aria-labelledby="addTaskModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addTaskModalLabel">
+                        <i class="fas fa-tasks me-2"></i>Add Task
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="addTaskForm">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="taskTitle" class="form-label">
+                                        <i class="fas fa-edit me-1"></i>Task Title *
+                                    </label>
+                                    <input type="text" class="form-control" id="taskTitle" required placeholder="e.g., Create landing page design">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="taskStatus" class="form-label">
+                                        <i class="fas fa-gear me-1"></i>Status
+                                    </label>
+                                    <select class="form-select" id="taskStatus">
+                                        <option value="todo">To Do</option>
+                                        <option value="in_progress">In Progress</option>
+                                        <option value="completed">Completed</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="taskDescription" class="form-label">
+                                <i class="fas fa-align-left me-1"></i>Description
+                            </label>
+                            <textarea class="form-control" id="taskDescription" rows="3" placeholder="Describe the task details..."></textarea>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="taskProject" class="form-label">
+                                        <i class="fas fa-project-diagram me-1"></i>Project *
+                                    </label>
+                                    <select class="form-select" id="taskProject" required>
+                                        <option value="">Select Project...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="taskAssignedTo" class="form-label">
+                                        <i class="fas fa-user me-1"></i>Assigned To
+                                    </label>
+                                    <select class="form-select" id="taskAssignedTo">
+                                        <option value="">Select User...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="taskDueDate" class="form-label">
+                                        <i class="fas fa-calendar me-1"></i>Due Date
+                                    </label>
+                                    <input type="date" class="form-control" id="taskDueDate">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Add Task
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -607,6 +847,376 @@
     
     <!-- Dashboard JavaScript -->
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up form event listeners
+            const createClientForm = document.getElementById('createClientForm');
+            const createProjectForm = document.getElementById('createProjectForm');
+            const addTaskForm = document.getElementById('addTaskForm');
+            
+            if (createClientForm) {
+                createClientForm.addEventListener('submit', handleCreateClient);
+            }
+            
+            if (createProjectForm) {
+                createProjectForm.addEventListener('submit', handleCreateProject);
+            }
+            
+            if (addTaskForm) {
+                addTaskForm.addEventListener('submit', handleAddTask);
+            }
+            
+            // Load data for forms when modals open
+            document.getElementById('createProjectModal').addEventListener('show.bs.modal', loadProjectFormData);
+            document.getElementById('addTaskModal').addEventListener('show.bs.modal', loadTaskFormData);
+            
+            // Set minimum date for due dates
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('projectDueDate').setAttribute('min', today);
+            document.getElementById('taskDueDate').setAttribute('min', today);
+        });
+
+        // Load clients and users for project form
+        async function loadProjectFormData() {
+            try {
+                // Load clients
+                const clientsResponse = await fetch('/api/clients/');
+                const clientsData = await clientsResponse.json();
+                
+                const clientSelect = document.getElementById('projectClient');
+                clientSelect.innerHTML = '<option value="">Select Client...</option>';
+                
+                if (clientsData.clients) {
+                    clientsData.clients.forEach(client => {
+                        clientSelect.innerHTML += `<option value="${client.id}">${client.name} (${client.company})</option>`;
+                    });
+                }
+                
+                // Load users (simulate since we don't have a users endpoint)
+                const userSelect = document.getElementById('projectAssignedTo');
+                userSelect.innerHTML = '<option value="">Select User...</option>';
+                userSelect.innerHTML += `<option value="1">admin (Admin)</option>`;
+                userSelect.innerHTML += `<option value="2">sara (Employee)</option>`;
+                
+            } catch (error) {
+                console.error('Error loading project form data:', error);
+                showAlert('Error loading form data', 'danger');
+            }
+        }
+
+        // Load projects and users for task form
+        async function loadTaskFormData() {
+            try {
+                // Load projects
+                const projectsResponse = await fetch('/api/projects/');
+                const projectsData = await projectsResponse.json();
+                
+                const projectSelect = document.getElementById('taskProject');
+                projectSelect.innerHTML = '<option value="">Select Project...</option>';
+                
+                if (projectsData.projects) {
+                    projectsData.projects.forEach(project => {
+                        projectSelect.innerHTML += `<option value="${project.id}">${project.name}</option>`;
+                    });
+                }
+                
+                // Load users for task assignment
+                const taskUserSelect = document.getElementById('taskAssignedTo');
+                taskUserSelect.innerHTML = '<option value="">Select User...</option>';
+                taskUserSelect.innerHTML += `<option value="admin">admin</option>`;
+                taskUserSelect.innerHTML += `<option value="sara">sara</option>`;
+                
+            } catch (error) {
+                console.error('Error loading task form data:', error);
+                showAlert('Error loading form data', 'danger');
+            }
+        }
+
+        // Handle client creation
+        async function handleCreateClient(event) {
+            event.preventDefault();
+            
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Creating...';
+            submitBtn.disabled = true;
+            
+            try {
+                const clientData = {
+                    name: document.getElementById('clientName').value.trim(),
+                    company: document.getElementById('clientCompany').value.trim(),
+                    email: document.getElementById('clientEmail').value.trim(),
+                    sector: document.getElementById('clientSector').value.trim()
+                };
+                
+                if (!clientData.name) {
+                    throw new Error('Client name is required');
+                }
+                
+                const response = await fetch('/api/clients/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(clientData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showAlert(`✅ Client "${data.client.name}" created successfully!`, 'success');
+                    
+                    // Close modal and reset form
+                    bootstrap.Modal.getInstance(document.getElementById('createClientModal')).hide();
+                    createClientForm.reset();
+                    
+                    // Refresh the page to show updated stats
+                    setTimeout(() => window.location.reload(), 1500);
+                    
+                } else {
+                    throw new Error(data.error || 'Failed to create client');
+                }
+                
+            } catch (error) {
+                showAlert('Error creating client: ' + error.message, 'danger');
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        // Handle project creation
+        async function handleCreateProject(event) {
+            event.preventDefault();
+            
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Creating...';
+            submitBtn.disabled = true;
+            
+            try {
+                const projectData = {
+                    name: document.getElementById('projectName').value.trim(),
+                    description: document.getElementById('projectDescription').value.trim(),
+                    status: document.getElementById('projectStatus').value,
+                    client_id: document.getElementById('projectClient').value || null,
+                    assigned_to: parseInt(document.getElementById('projectAssignedTo').value),
+                    due_date: document.getElementById('projectDueDate').value || null
+                };
+                
+                if (!projectData.name) {
+                    throw new Error('Project name is required');
+                }
+                
+                if (!projectData.assigned_to) {
+                    throw new Error('Please assign the project to a user');
+                }
+                
+                const response = await fetch('/api/projects/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(projectData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showAlert(`✅ Project "${data.project.name}" created successfully!`, 'success');
+                    
+                    // Close modal and reset form
+                    bootstrap.Modal.getInstance(document.getElementById('createProjectModal')).hide();
+                    createProjectForm.reset();
+                    
+                    // Refresh the page to show updated stats
+                    setTimeout(() => window.location.reload(), 1500);
+                    
+                } else {
+                    throw new Error(data.error || 'Failed to create project');
+                }
+                
+            } catch (error) {
+                showAlert('Error creating project: ' + error.message, 'danger');
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        // Handle task creation
+        async function handleAddTask(event) {
+            event.preventDefault();
+            
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Adding...';
+            submitBtn.disabled = true;
+            
+            try {
+                const taskData = {
+                    title: document.getElementById('taskTitle').value.trim(),
+                    description: document.getElementById('taskDescription').value.trim(),
+                    status: document.getElementById('taskStatus').value,
+                    assigned_to: document.getElementById('taskAssignedTo').value.trim(),
+                    due_date: document.getElementById('taskDueDate').value || null
+                };
+                
+                const projectId = document.getElementById('taskProject').value;
+                
+                if (!taskData.title) {
+                    throw new Error('Task title is required');
+                }
+                
+                if (!projectId) {
+                    throw new Error('Please select a project for this task');
+                }
+                
+                const response = await fetch(`/api/projects/${projectId}/tasks`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(taskData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showAlert(`✅ Task "${data.task.title}" added successfully!`, 'success');
+                    
+                    // Close modal and reset form
+                    bootstrap.Modal.getInstance(document.getElementById('addTaskModal')).hide();
+                    addTaskForm.reset();
+                    
+                    // Refresh the page to show updated stats
+                    setTimeout(() => window.location.reload(), 1500);
+                    
+                } else {
+                    throw new Error(data.error || 'Failed to add task');
+                }
+                
+            } catch (error) {
+                showAlert('Error adding task: ' + error.message, 'danger');
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        // Show projects view function
+        function showProjectsView() {
+            // Show projects in a modal instead of redirecting
+            showAlert('📁 Loading projects view...', 'info');
+            setTimeout(() => {
+                // Load projects data and display it
+                showProjectsModal();
+            }, 1000);
+        }
+
+        // Optional: Projects modal function (if you want to show projects in a modal)
+        function showProjectsModal() {
+            // Create and show a modal with projects list
+            const projectsModal = `
+                <div class="modal fade" id="projectsModal" tabindex="-1">
+                    <div class="modal-dialog modal-xl">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-project-diagram me-2"></i>All Projects
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="text-center py-4">
+                                    <i class="fas fa-spinner fa-spin fa-2x text-primary mb-3"></i>
+                                    <p>Loading projects...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add modal to page and show it
+            document.body.insertAdjacentHTML('beforeend', projectsModal);
+            const modal = new bootstrap.Modal(document.getElementById('projectsModal'));
+            modal.show();
+            
+            // Load projects data here
+            loadAllProjects();
+        }
+
+        // Load all projects function
+        async function loadAllProjects() {
+            try {
+                const response = await fetch('/api/projects/');
+                const data = await response.json();
+                
+                const modalBody = document.querySelector('#projectsModal .modal-body');
+                
+                if (data.projects && data.projects.length > 0) {
+                    let projectsHTML = '<div class="row">';
+                    
+                    data.projects.forEach(project => {
+                        projectsHTML += `
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title">${project.name}</h6>
+                                        <p class="card-text">${project.description || 'No description'}</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="badge bg-${project.status === 'active' ? 'success' : project.status === 'completed' ? 'primary' : 'warning'}">
+                                                ${project.status}
+                                            </span>
+                                            <a href="/project/${project.id}" class="btn btn-sm btn-outline-primary">
+                                                View
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    projectsHTML += '</div>';
+                    modalBody.innerHTML = projectsHTML;
+                } else {
+                    modalBody.innerHTML = `
+                        <div class="text-center py-4">
+                            <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                            <h5>No Projects Found</h5>
+                            <p class="text-muted">Create your first project to see it here.</p>
+                            <button class="btn btn-primary" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#createProjectModal">
+                                <i class="fas fa-plus me-2"></i>Create Project
+                            </button>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                const modalBody = document.querySelector('#projectsModal .modal-body');
+                modalBody.innerHTML = `
+                    <div class="text-center py-4">
+                        <i class="fas fa-exclamation-triangle fa-2x text-danger mb-3"></i>
+                        <h5>Error Loading Projects</h5>
+                        <p class="text-muted">Failed to load projects data.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Utility functions
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 350px; border-radius: 15px;';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 4000);
+        }
+
         // Logout function
         async function logout() {
             try {
@@ -618,26 +1228,6 @@
             } catch (error) {
                 window.location.href = '/auth/login';
             }
-        }
-
-        // Show alert function
-        function showAlert(message, type = 'info', duration = 5000) {
-            const alertDiv = document.createElement('div');
-            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-            alertDiv.innerHTML = `
-                <i class="fas fa-info-circle me-2"></i>
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            document.body.appendChild(alertDiv);
-            
-            // Auto remove
-            setTimeout(() => {
-                if (alertDiv.parentNode) {
-                    alertDiv.remove();
-                }
-            }, duration);
         }
     </script>
 </body>
