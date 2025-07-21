@@ -1,0 +1,127 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "client_created",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -120,
+        0
+      ],
+      "id": "a144fb8d-dc89-4baf-93b0-f0eec4e29726",
+      "name": "Webhook",
+      "webhookId": "795f8ed4-95c2-408c-8a90-3c229127fc78"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "65367121-fec1-426f-a960-44ab67cfbfb1",
+              "name": "client_name",
+              "value": "={{ $json.body.data.client_name }}",
+              "type": "string"
+            },
+            {
+              "id": "c5381f9e-0ecb-4dca-bbe1-4716825b97e9",
+              "name": "client_email",
+              "value": "={{ $json.body.data.email }}",
+              "type": "string"
+            },
+            {
+              "id": "fead9733-3ff9-4822-ab97-6d1eca216a47",
+              "name": "company",
+              "value": "={{ $json.body.data.company }}",
+              "type": "string"
+            },
+            {
+              "id": "ac6587a6-6479-4d9f-93cc-ec7f7f499da0",
+              "name": "sector",
+              "value": "={{ $json.body.data.sector }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        300,
+        0
+      ],
+      "id": "a9ab49eb-e22f-4618-8b81-76a031f8202e",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "toEmail": "={{ $json.client_email }}",
+        "subject": "=Welcome to Our Marketing Platform - {{ $json.client_name }}",
+        "html": "=<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 12px;\">\n  <div style=\"text-align: center; margin-bottom: 30px;\">\n    <h1 style=\"color: #6366f1; margin: 0;\">🚀 Welcome to Our Marketing Platform!</h1>\n  </div>\n  \n  <div style=\"background: linear-gradient(135deg, #6366f1, #ec4899); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;\">\n    <h2 style=\"margin: 0 0 10px 0;\">Hello !</h2>{{ $json.client_name }}\n    <p style=\"margin: 0; opacity: 0.9;\">Thank you for choosing our marketing platform. We're excited to help you grow your business!</p>\n  </div>\n  \n  <div style=\"padding: 20px 0;\">\n    <h3 style=\"color: #374151;\">🎯 What's Next?</h3>\n    <ul style=\"color: #6b7280; line-height: 1.6;\">\n      <li><strong>Account Setup:</strong> Our team will contact you within 24 hours</li>\n      <li><strong>Strategy Session:</strong> We'll schedule a consultation call</li>\n      <li><strong>Campaign Launch:</strong> Start your first marketing campaign</li>\n    </ul>\n  </div>\n  \n  <div style=\"background: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0;\">\n    <h4 style=\"color: #374151; margin: 0 0 10px 0;\">📊 Your Account Details:</h4>\n    <p style=\"margin: 5px 0; color: #6b7280;\"><strong>Company:</strong> {{ $json.company }}</p>\n    <p style=\"margin: 5px 0; color: #6b7280;\"><strong>Sector:</strong> {{ $json.sector }}</p>\n    <p style=\"margin: 5px 0; color: #6b7280;\"><strong>Email:</strong> {{ $json.client_email }}</p>\n  </div>\n  \n  <div style=\"text-align: center; margin: 30px 0;\">\n    <a href=\"http://localhost:5000\" style=\"background: linear-gradient(135deg, #6366f1, #ec4899); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;\">\n      🏠 Access Your Dashboard\n    </a>\n  </div>\n  \n  <div style=\"border-top: 1px solid #e5e7eb; padding-top: 20px; text-align: center; color: #9ca3af; font-size: 14px;\">\n    <p>Need help? Reply to this email or contact us at support@tm-holding.ma</p>\n    <p style=\"margin: 5px 0;\">TM Holding Marketing Team</p>\n  </div>\n</div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        740,
+        0
+      ],
+      "id": "83f1197d-a965-44dc-9cf2-d4e78b6a34fa",
+      "name": "Send email",
+      "webhookId": "0a767f68-efcf-4fbd-b44e-ae7b5ba9f088",
+      "credentials": {
+        "smtp": {
+          "id": "5qO8tti0bkpGgqTp",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Send email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send email": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "7d6cd638-9fe6-4983-827f-4a2b726bc11f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "64d2fa8a221bf0d55cafd60c0a0a477ba2f7b02eb23616e261d57c6c29a3a6f0"
+  },
+  "id": "QlOFKb40lczl8Bu8",
+  "tags": []
+}
