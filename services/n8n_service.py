@@ -11,6 +11,7 @@ class N8NService:
         self.n8n_url = os.getenv('N8N_URL', 'http://localhost:5678')
         self.webhook_url = os.getenv('N8N_WEBHOOK_URL', 'http://localhost:5678/webhook-test')
 
+
     
     def trigger_workflow(self, trigger_type, data, project_id=None):
         """
