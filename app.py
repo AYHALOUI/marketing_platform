@@ -12,6 +12,7 @@ login_manager = LoginManager()
 def create_app():
     # Explicitly set template folder
     app = Flask(__name__, template_folder='templates', static_folder='static')
+
     
     # Configuration
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-key-change-in-production')
@@ -50,7 +51,6 @@ def create_app():
     app.register_blueprint(tasks_bp)
     app.register_blueprint(homepage_bp)
     app.register_blueprint(clients_bp)
-
     app.register_blueprint(n8n_bp) 
     
     @app.route('/auth/login')
@@ -58,6 +58,7 @@ def create_app():
         if current_user.is_authenticated:
             return redirect(url_for('dashboard'))
         return render_template('auth/login.html')
+    
     
     from models import User, Client, Project, Task
     from sqlalchemy import desc, func

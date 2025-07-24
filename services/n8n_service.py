@@ -10,18 +10,8 @@ class N8NService:
     def __init__(self):
         self.n8n_url = os.getenv('N8N_URL', 'http://localhost:5678')
         self.webhook_url = os.getenv('N8N_WEBHOOK_URL', 'http://localhost:5678/webhook-test')
-
-
     
     def trigger_workflow(self, trigger_type, data, project_id=None):
-        """
-        Trigger an N8N workflow with specified data
-        
-        Args:
-            trigger_type (str): Type of trigger ('client_created', 'project_created', etc.)
-            data (dict): Data to send to N8N
-            project_id (int): Optional project ID for tracking
-        """
         try:
             # Prepare payload for N8N
             payload = {
@@ -34,35 +24,24 @@ class N8NService:
             # Send to N8N webhook
             webhook_endpoint = f"{self.webhook_url}/{trigger_type}"
             
-            print(f"🔄 Triggering N8N workflow: {trigger_type}")
-            print(f"📡 Webhook URL: {webhook_endpoint}")
-            print(f"📦 Payload: {json.dumps(payload, indent=2)}")
-            
             response = requests.post(
                 webhook_endpoint,
                 json=payload,
                 headers={'Content-Type': 'application/json'},
                 timeout=10
             )
-            
-            if response.status_code == 200:
-                print(f"✅ N8N workflow triggered successfully: {trigger_type}")
-                
-                # Log the trigger in database
+
+            if response.status_code == 200:                
                 self._log_automation_trigger(trigger_type, payload, project_id, 'success')
-                
                 return True
             else:
-                print(f"❌ N8N workflow failed: {response.status_code} - {response.text}")
                 self._log_automation_trigger(trigger_type, payload, project_id, 'failed')
                 return False
                 
         except requests.exceptions.RequestException as e:
-            print(f"🔌 N8N connection error for {trigger_type}: {str(e)}")
             self._log_automation_trigger(trigger_type, data, project_id, 'connection_failed')
             return False
         except Exception as e:
-            print(f"💥 Unexpected error triggering N8N workflow {trigger_type}: {str(e)}")
             return False
     
     def _log_automation_trigger(self, trigger_type, data, project_id, status):
@@ -76,13 +55,12 @@ class N8NService:
                 is_active=True,
                 project_id=project_id
             )
-            
             db.session.add(trigger)
             db.session.commit()
             
         except Exception as e:
             print(f"📝 Failed to log automation trigger: {str(e)}")
-    
+          
     # Specific workflow triggers
     def client_created(self, client_data):
         """Trigger when a new client is created"""
@@ -93,7 +71,7 @@ class N8NService:
             'email': client_data.get('email'),
             'sector': client_data.get('sector')
         })
-    
+        
     def project_created(self, project_data):
         """Trigger when a new project is created"""
         return self.trigger_workflow('project_created', {
@@ -105,6 +83,7 @@ class N8NService:
             'status': project_data.get('status')
         }, project_id=project_data.get('id'))
     
+
     def task_created(self, task_data):
         """Trigger when a new task is created"""
         return self.trigger_workflow('task_created', {
