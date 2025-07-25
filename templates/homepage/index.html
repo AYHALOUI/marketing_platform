@@ -24,6 +24,27 @@
         </div>
     </div>
 
+    <!-- Search Bar -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0">
+                    <i class="bi bi-search text-muted"></i>
+                </span>
+                <input type="text" class="form-control border-start-0" id="clientSearch" 
+                       placeholder="Search clients by name, company, or sector...">
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="d-flex justify-content-end align-items-center">
+                <span class="text-muted me-3">
+                    <i class="bi bi-people me-1"></i>
+                    <span id="clientCount">{{ clients|length }}</span> clients total
+                </span>
+            </div>
+        </div>
+    </div>
+
     <!-- Clients Section -->
     <div class="row">
         <div class="col-12">
@@ -34,128 +55,251 @@
                     </h5>
                 </div>
                 <div class="card-body" style="padding: 2rem;">
-                    {% if clients %}
-                        <div class="row">
-                            {% for client in clients %}
-                            <div class="col-md-4 mb-4">
-                                <div class="card h-100 border-0" style="box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-radius: 12px;">
-                                    <div class="card-body">
-                                        <div class="d-flex align-items-center mb-3">
-                                            <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #6366f1, #ec4899); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 1rem;">
-                                                <i class="bi bi-building text-white" style="font-size: 1.2rem;"></i>
+                    <div id="clientsContainer">
+                        {% if clients %}
+                            <div class="row" id="clientsGrid">
+                                {% for client in clients %}
+                                <div class="col-md-4 mb-4 client-card" data-client-id="{{ client.id }}">
+                                    <div class="card h-100 border-0" style="box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-radius: 12px; transition: all 0.3s ease;">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center mb-3">
+                                                <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #6366f1, #ec4899); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 1rem;">
+                                                    <i class="bi bi-building text-white" style="font-size: 1.2rem;"></i>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <h6 class="mb-1 client-name" style="font-weight: 700;">{{ client.name }}</h6>
+                                                    <small class="text-muted client-company">{{ client.company or 'No company' }}</small>
+                                                </div>
+                                                {% if current_user.is_admin() %}
+                                                <div class="dropdown">
+                                                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" 
+                                                            data-bs-toggle="dropdown" style="border-radius: 20px;">
+                                                        <i class="bi bi-three-dots"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li>
+                                                            <a class="dropdown-item" href="#" onclick="editClient({{ client.id }})">
+                                                                <i class="bi bi-pencil me-2"></i>Edit
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item text-danger" href="#" onclick="deleteClient({{ client.id }}, '{{ client.name }}')">
+                                                                <i class="bi bi-trash me-2"></i>Delete
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                                {% endif %}
                                             </div>
-                                            <div>
-                                                <h6 class="mb-1" style="font-weight: 700;">{{ client.name }}</h6>
-                                                <small class="text-muted">{{ client.company }}</small>
+                                            
+                                            <div class="mb-3">
+                                                <small class="text-muted client-sector">
+                                                    <i class="bi bi-tag me-1"></i>{{ client.sector or 'No sector' }}
+                                                </small>
+                                                {% if client.email %}
+                                                <br>
+                                                <small class="text-muted client-email">
+                                                    <i class="bi bi-envelope me-1"></i>{{ client.email }}
+                                                </small>
+                                                {% endif %}
                                             </div>
-                                        </div>
-                                        
-                                        <div class="mb-3">
-                                            <small class="text-muted">
-                                                <i class="bi bi-tag me-1"></i>{{ client.sector }}
-                                            </small>
-                                        </div>
-                                        
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <small class="text-muted">
-                                                <i class="bi bi-folder me-1"></i>{{ client.projects|length }} projects
-                                            </small>
-                                            <a href="/api/clients/{{ client.id }}" class="btn btn-outline-primary btn-sm">
-                                                <i class="bi bi-eye me-1"></i>View
-                                            </a>
+                                            
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <small class="text-muted">
+                                                    <i class="bi bi-folder me-1"></i>{{ client.projects|length }} projects
+                                                </small>
+                                                <a href="/api/clients/{{ client.id }}" class="btn btn-outline-primary btn-sm">
+                                                    <i class="bi bi-eye me-1"></i>View
+                                                </a>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
+                                {% endfor %}
                             </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <div class="text-center py-5">
-                            <i class="bi bi-people" style="font-size: 3rem; color: #6b7280;"></i>
-                            <h5 class="mt-3" style="color: #6b7280;">No clients yet</h5>
-                            <p class="text-muted">Add your first client to get started!</p>
-                        </div>
-                    {% endif %}
+                        {% else %}
+                            <div class="text-center py-5" id="emptyState">
+                                <i class="bi bi-people" style="font-size: 3rem; color: #6b7280;"></i>
+                                <h5 class="mt-3" style="color: #6b7280;">No clients yet</h5>
+                                <p class="text-muted">Add your first client to get started!</p>
+                                {% if current_user.is_admin() %}
+                                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createClientModal">
+                                    <i class="bi bi-plus-circle me-2"></i>Create First Client
+                                </button>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Create Client Modal -->
-<div class="modal fade" id="createClientModal" tabindex="-1" aria-labelledby="createClientModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="createClientModalLabel">
-                    <i class="bi bi-building me-2"></i>Create New Client
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal fade" id="createClientModal" tabindex="-1" aria-labelledby="createClientModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createClientModalLabel">
+                        <i class="bi bi-building me-2"></i>Create New Client
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="createClientForm">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="clientName" class="form-label">
+                                        <i class="bi bi-person me-1"></i>Client Name *
+                                    </label>
+                                    <input type="text" class="form-control" id="clientName" required 
+                                           placeholder="e.g., Nike">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="clientCompany" class="form-label">
+                                        <i class="bi bi-building me-1"></i>Company
+                                    </label>
+                                    <input type="text" class="form-control" id="clientCompany" 
+                                           placeholder="e.g., Nike Inc.">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="clientEmail" class="form-label">
+                                        <i class="bi bi-envelope me-1"></i>Email
+                                    </label>
+                                    <input type="email" class="form-control" id="clientEmail" 
+                                           placeholder="contact@client.com">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="clientSector" class="form-label">
+                                        <i class="bi bi-tag me-1"></i>Sector
+                                    </label>
+                                    <input type="text" class="form-control" id="clientSector" 
+                                           placeholder="e.g., Technology">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-1"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle me-1"></i>Create Client
+                        </button>
+                    </div>
+                </form>
             </div>
-            <form id="createClientForm">
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="clientName" class="form-label">
-                                    <i class="bi bi-person me-1"></i>Client Name *
-                                </label>
-                                <input type="text" class="form-control" id="clientName" required 
-                                       placeholder="e.g., Nike">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="clientCompany" class="form-label">
-                                    <i class="bi bi-building me-1"></i>Company
-                                </label>
-                                <input type="text" class="form-control" id="clientCompany" 
-                                       placeholder="e.g., Nike Inc.">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="clientEmail" class="form-label">
-                                    <i class="bi bi-envelope me-1"></i>Email
-                                </label>
-                                <input type="email" class="form-control" id="clientEmail" 
-                                       placeholder="contact@client.com">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="clientSector" class="form-label">
-                                    <i class="bi bi-tag me-1"></i>Sector
-                                </label>
-                                <input type="text" class="form-control" id="clientSector" 
-                                       placeholder="e.g., Technology">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x-circle me-1"></i>Cancel
-                    </button>
-                    <button type="submit" class="btn btn-success">
-                        <i class="bi bi-check-circle me-1"></i>Create Client
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
+
+    <!-- Edit Client Modal -->
+    <div class="modal fade" id="editClientModal" tabindex="-1" aria-labelledby="editClientModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editClientModalLabel">
+                        <i class="bi bi-pencil me-2"></i>Edit Client
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="editClientForm">
+                    <div class="modal-body">
+                        <input type="hidden" id="editClientId">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editClientName" class="form-label">
+                                        <i class="bi bi-person me-1"></i>Client Name *
+                                    </label>
+                                    <input type="text" class="form-control" id="editClientName" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editClientCompany" class="form-label">
+                                        <i class="bi bi-building me-1"></i>Company
+                                    </label>
+                                    <input type="text" class="form-control" id="editClientCompany">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editClientEmail" class="form-label">
+                                        <i class="bi bi-envelope me-1"></i>Email
+                                    </label>
+                                    <input type="email" class="form-control" id="editClientEmail">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editClientSector" class="form-label">
+                                        <i class="bi bi-tag me-1"></i>Sector
+                                    </label>
+                                    <input type="text" class="form-control" id="editClientSector">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-1"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-1"></i>Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
+    let allClients = [];
+
     document.addEventListener('DOMContentLoaded', function() {
         const createClientForm = document.getElementById('createClientForm');
+        const editClientForm = document.getElementById('editClientForm');
+        const searchInput = document.getElementById('clientSearch');
         
         if (createClientForm) {
             createClientForm.addEventListener('submit', handleCreateClient);
         }
+        
+        if (editClientForm) {
+            editClientForm.addEventListener('submit', handleEditClient);
+        }
+        
+        if (searchInput) {
+            searchInput.addEventListener('input', handleSearch);
+        }
+
+        // Store all clients data for search
+        allClients = [
+            {% for client in clients %}
+            {
+                id: {{ client.id }},
+                name: "{{ client.name }}",
+                company: "{{ client.company or '' }}",
+                email: "{{ client.email or '' }}",
+                sector: "{{ client.sector or '' }}",
+                project_count: {{ client.projects|length }}
+            },
+            {% endfor %}
+        ];
     });
     
     async function handleCreateClient(event) {
@@ -210,11 +354,245 @@
             submitBtn.disabled = false;
         }
     }
+
+    async function editClient(clientId) {
+        try {
+            // Get current client data
+            const client = allClients.find(c => c.id === clientId);
+            if (!client) {
+                showAlert('Client not found', 'danger');
+                return;
+            }
+            
+            // Populate the edit form
+            document.getElementById('editClientId').value = client.id;
+            document.getElementById('editClientName').value = client.name;
+            document.getElementById('editClientCompany').value = client.company;
+            document.getElementById('editClientEmail').value = client.email;
+            document.getElementById('editClientSector').value = client.sector;
+            
+            // Show the edit modal
+            const editModal = new bootstrap.Modal(document.getElementById('editClientModal'));
+            editModal.show();
+            
+        } catch (error) {
+            showAlert('Error loading client data: ' + error.message, 'danger');
+        }
+    }
+
+    async function handleEditClient(event) {
+        event.preventDefault();
+        
+        const submitBtn = event.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="bi bi-arrow-clockwise spin me-1"></i> Saving...';
+        submitBtn.disabled = true;
+        
+        try {
+            const clientId = document.getElementById('editClientId').value;
+            const clientData = {
+                name: document.getElementById('editClientName').value.trim(),
+                company: document.getElementById('editClientCompany').value.trim(),
+                email: document.getElementById('editClientEmail').value.trim(),
+                sector: document.getElementById('editClientSector').value.trim()
+            };
+            
+            if (!clientData.name) {
+                throw new Error('Client name is required');
+            }
+            
+            const response = await fetch(`/api/clients/${clientId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(clientData)
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showAlert(`✅ Client "${data.client.name}" updated successfully!`, 'success');
+                
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('editClientModal'));
+                if (modal) modal.hide();
+                
+                // Reload page to show updated client
+                window.location.reload();
+                
+            } else {
+                throw new Error(data.error || 'Failed to update client');
+            }
+            
+        } catch (error) {
+            showAlert('Error updating client: ' + error.message, 'danger');
+        } finally {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
+    }
+
+    async function deleteClient(clientId, clientName) {
+        // Show confirmation with detailed warning
+        const confirmed = confirm(
+            `⚠️ Are you sure you want to delete "${clientName}"?\n\n` +
+            `This will also delete:\n` +
+            `• All projects for this client\n` +
+            `• All tasks within those projects\n\n` +
+            `This action cannot be undone!`
+        );
+        
+        if (!confirmed) return;
+        
+        try {
+            const response = await fetch(`/api/clients/${clientId}`, {
+                method: 'DELETE'
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showAlert(`✅ ${data.message}`, 'success');
+                
+                // Remove the client card from the UI
+                const clientCard = document.querySelector(`[data-client-id="${clientId}"]`);
+                if (clientCard) {
+                    clientCard.style.transition = 'all 0.3s ease';
+                    clientCard.style.opacity = '0';
+                    clientCard.style.transform = 'scale(0.9)';
+                    
+                    setTimeout(() => {
+                        clientCard.remove();
+                        updateClientCount();
+                        checkEmptyState();
+                    }, 300);
+                }
+                
+            } else {
+                if (response.status === 400 && data.active_projects) {
+                    // Show specific error for active projects
+                    let projectsList = data.active_projects.map(p => `• ${p.name}`).join('\n');
+                    showAlert(
+                        `❌ Cannot delete client "${clientName}".\n\nActive projects:\n${projectsList}\n\nPlease complete or reassign these projects first.`, 
+                        'warning'
+                    );
+                } else {
+                    throw new Error(data.error || 'Failed to delete client');
+                }
+            }
+            
+        } catch (error) {
+            showAlert('Error deleting client: ' + error.message, 'danger');
+        }
+    }
+
+    function handleSearch() {
+        const searchTerm = document.getElementById('clientSearch').value.toLowerCase().trim();
+        const clientCards = document.querySelectorAll('.client-card');
+        let visibleCount = 0;
+        
+        if (!searchTerm) {
+            // Show all clients
+            clientCards.forEach(card => {
+                card.style.display = 'block';
+                visibleCount++;
+            });
+        } else {
+            // Filter clients
+            clientCards.forEach(card => {
+                const clientId = parseInt(card.dataset.clientId);
+                const client = allClients.find(c => c.id === clientId);
+                
+                if (client) {
+                    const searchableText = `${client.name} ${client.company} ${client.sector} ${client.email}`.toLowerCase();
+                    
+                    if (searchableText.includes(searchTerm)) {
+                        card.style.display = 'block';
+                        visibleCount++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                }
+            });
+        }
+        
+        // Update count
+        document.getElementById('clientCount').textContent = visibleCount;
+        
+        // Show/hide empty state for search
+        if (visibleCount === 0 && searchTerm) {
+            showSearchEmptyState(searchTerm);
+        } else {
+            hideSearchEmptyState();
+        }
+    }
+
+    function showSearchEmptyState(searchTerm) {
+        const existingEmptyState = document.getElementById('searchEmptyState');
+        if (existingEmptyState) return;
+        
+        const clientsGrid = document.getElementById('clientsGrid');
+        const emptyStateHtml = `
+            <div class="col-12" id="searchEmptyState">
+                <div class="text-center py-5">
+                    <i class="bi bi-search" style="font-size: 3rem; color: #6b7280;"></i>
+                    <h5 class="mt-3" style="color: #6b7280;">No clients found</h5>
+                    <p class="text-muted">No clients match your search for "${searchTerm}"</p>
+                    <button class="btn btn-outline-primary" onclick="clearSearch()">
+                        <i class="bi bi-x-circle me-1"></i>Clear Search
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        if (clientsGrid) {
+            clientsGrid.insertAdjacentHTML('beforeend', emptyStateHtml);
+        }
+    }
+
+    function hideSearchEmptyState() {
+        const searchEmptyState = document.getElementById('searchEmptyState');
+        if (searchEmptyState) {
+            searchEmptyState.remove();
+        }
+    }
+
+    function clearSearch() {
+        document.getElementById('clientSearch').value = '';
+        handleSearch();
+    }
+
+    function updateClientCount() {
+        const visibleCards = document.querySelectorAll('.client-card[style*="block"], .client-card:not([style*="none"])');
+        document.getElementById('clientCount').textContent = visibleCards.length;
+    }
+
+    function checkEmptyState() {
+        const clientCards = document.querySelectorAll('.client-card');
+        const emptyState = document.getElementById('emptyState');
+        
+        if (clientCards.length === 0) {
+            if (!emptyState) {
+                const clientsContainer = document.getElementById('clientsContainer');
+                clientsContainer.innerHTML = `
+                    <div class="text-center py-5" id="emptyState">
+                        <i class="bi bi-people" style="font-size: 3rem; color: #6b7280;"></i>
+                        <h5 class="mt-3" style="color: #6b7280;">No clients yet</h5>
+                        <p class="text-muted">Add your first client to get started!</p>
+                        {% if current_user.is_admin() %}
+                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createClientModal">
+                            <i class="bi bi-plus-circle me-2"></i>Create First Client
+                        </button>
+                        {% endif %}
+                    </div>
+                `;
+            }
+        }
+    }
     
     function showAlert(message, type = 'info') {
         const alertDiv = document.createElement('div');
         alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-        alertDiv.style.cssText = 'top: 90px; right: 20px; z-index: 9999; min-width: 350px; border-radius: 15px;';
+        alertDiv.style.cssText = 'top: 90px; right: 20px; z-index: 9999; min-width: 350px; border-radius: 15px; white-space: pre-line;';
         alertDiv.innerHTML = `
             ${message}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -226,8 +604,23 @@
             if (alertDiv.parentNode) {
                 alertDiv.remove();
             }
-        }, 4000);
+        }, 6000);
     }
-    </script>
-{% endblock %}
 
+    // Add hover effects for client cards
+    document.addEventListener('DOMContentLoaded', function() {
+        const style = document.createElement('style');
+        style.textContent = `
+            .client-card .card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+            }
+            
+            .client-card {
+                transition: all 0.3s ease;
+            }
+        `;
+        document.head.appendChild(style);
+    });
+</script>
+{% endblock %}

@@ -1,10 +1,7 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, render_template
 from flask_login import login_required, current_user
 from models import Client, db
-from flask import Blueprint, request, jsonify, render_template
 from services.n8n_service import n8n_service
-
-
 
 clients_bp = Blueprint('clients', __name__, url_prefix='/api/clients')
 
@@ -78,7 +75,8 @@ def get_clients():
                 'company': client.company,
                 'email': client.email,
                 'sector': client.sector,
-                'project_count': len(client.projects)
+                'project_count': len(client.projects),
+                'created_at': client.created_at.isoformat() if client.created_at else None
             })
         
         return jsonify({
@@ -88,7 +86,7 @@ def get_clients():
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    
+
 @clients_bp.route('/<int:client_id>', methods=['GET'])
 @login_required
 def get_client_details(client_id):
@@ -123,6 +121,160 @@ def get_client_details(client_id):
         }
         
         return render_template('client/details.html', client=client_data)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@clients_bp.route('/<int:client_id>', methods=['PUT'])
+@login_required
+def update_client(client_id):
+    """Update client details (admin only)"""
+    if not current_user.is_admin():
+        return jsonify({'error': 'Only admins can update clients'}), 403
+    
+    try:
+        client = Client.query.get_or_404(client_id)
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        # Update fields if provided
+        if 'name' in data:
+            if not data['name'].strip():
+                return jsonify({'error': 'Client name cannot be empty'}), 400
+            client.name = data['name'].strip()
+        
+        if 'company' in data:
+            client.company = data['company'].strip()
+        
+        if 'email' in data:
+            client.email = data['email'].strip()
+        
+        if 'sector' in data:
+            client.sector = data['sector'].strip()
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Client updated successfully',
+            'client': {
+                'id': client.id,
+                'name': client.name,
+                'company': client.company,
+                'email': client.email,
+                'sector': client.sector,
+                'project_count': len(client.projects)
+            }
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@clients_bp.route('/<int:client_id>', methods=['DELETE'])
+@login_required
+def delete_client(client_id):
+    """Delete client (admin only) - with safety checks"""
+    if not current_user.is_admin():
+        return jsonify({'error': 'Only admins can delete clients'}), 403
+    
+    try:
+        client = Client.query.get_or_404(client_id)
+        
+        # Safety check: Don't delete if client has active projects
+        active_projects = [p for p in client.projects if p.status == 'active']
+        if active_projects:
+            return jsonify({
+                'error': f'Cannot delete client with {len(active_projects)} active projects. Please complete or reassign them first.',
+                'active_projects': [{'id': p.id, 'name': p.name} for p in active_projects]
+            }), 400
+        
+        # Store client info for response
+        client_name = client.name
+        client_company = client.company or "No company"
+        
+        # Delete the client (this will cascade to projects and tasks due to relationships)
+        db.session.delete(client)
+        db.session.commit()
+        
+        return jsonify({
+            'message': f'Client "{client_name}" ({client_company}) deleted successfully'
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@clients_bp.route('/<int:client_id>/projects', methods=['GET'])
+@login_required
+def get_client_projects(client_id):
+    """Get all projects for a specific client"""
+    try:
+        client = Client.query.get_or_404(client_id)
+        
+        projects_data = []
+        for project in client.projects:
+            projects_data.append({
+                'id': project.id,
+                'name': project.name,
+                'description': project.description,
+                'status': project.status,
+                'due_date': project.due_date.isoformat() if project.due_date else None,
+                'created_at': project.created_at.isoformat(),
+                'owner': project.owner.username,
+                'progress': project.get_progress(),
+                'task_count': len(project.tasks)
+            })
+        
+        return jsonify({
+            'client': {
+                'id': client.id,
+                'name': client.name,
+                'company': client.company
+            },
+            'projects': projects_data,
+            'count': len(projects_data)
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@clients_bp.route('/search', methods=['GET'])
+@login_required  
+def search_clients():
+    """Search clients by name, company, or sector"""
+    try:
+        query = request.args.get('q', '').strip()
+        
+        if not query:
+            return jsonify({'clients': [], 'count': 0}), 200
+        
+        # Search in name, company, and sector fields
+        clients = Client.query.filter(
+            db.or_(
+                Client.name.ilike(f'%{query}%'),
+                Client.company.ilike(f'%{query}%'),
+                Client.sector.ilike(f'%{query}%')
+            )
+        ).all()
+        
+        clients_data = []
+        for client in clients:
+            clients_data.append({
+                'id': client.id,
+                'name': client.name,
+                'company': client.company,
+                'email': client.email,
+                'sector': client.sector,
+                'project_count': len(client.projects)
+            })
+        
+        return jsonify({
+            'clients': clients_data,
+            'count': len(clients_data),
+            'query': query
+        }), 200
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
