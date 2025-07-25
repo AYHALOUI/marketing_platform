@@ -345,21 +345,43 @@ document.addEventListener('DOMContentLoaded', function() {
 // Load users for task assignment dropdown
 async function loadUsersForTask() {
     try {
-        // For now, let's add users manually until we fix the endpoint
-        const users = [
-            { id: 1, username: 'admin', role: 'admin' },
-            { id: 2, username: 'sara', role: 'employee' }
-        ];
+        // 🔧 FIXED: Load real users from database instead of hardcoded ones
+        const response = await fetch('/api/users/');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
         
         const select = document.getElementById('taskAssignedTo');
         if (select) {
-            select.innerHTML = '<option value="">Select User...</option>';
-            users.forEach(user => {
-                select.innerHTML += `<option value="${user.username}">${user.username} (${user.role})</option>`;
-            });
+            select.innerHTML = '<option value="">-- Select User (Optional) --</option>';
+            
+            if (data.users && data.users.length > 0) {
+                data.users.forEach(user => {
+                    select.innerHTML += `<option value="${user.username}">${user.username} (${user.role.charAt(0).toUpperCase() + user.role.slice(1)})</option>`;
+                });
+                
+                console.log(`✅ Loaded ${data.users.length} users for task assignment`);
+            } else {
+                select.innerHTML += '<option value="" disabled>No users available</option>';
+                console.warn('⚠️ No users found in database');
+            }
         }
+        
     } catch (error) {
         console.error('Error loading users for task:', error);
+        
+        // Fallback display
+        const select = document.getElementById('taskAssignedTo');
+        if (select) {
+            select.innerHTML = '<option value="">Error loading users</option>';
+            select.innerHTML += '<option value="" disabled>Please refresh and try again</option>';
+        }
+        
+        // Show user-friendly error
+        showAlert('Unable to load users. Please refresh the page and try again.', 'warning');
     }
 }
 
@@ -562,6 +584,9 @@ function displayTasks(taskList) {
 }
 
 // Add new task
+// Also update your addTask function to validate user assignment
+// Find the addTask function in your templates/project/details.html and update it:
+
 async function addTask(event) {
     event.preventDefault();
     
@@ -579,9 +604,17 @@ async function addTask(event) {
             due_date: document.getElementById('taskDueDate').value || null
         };
         
+        // Validation checks
         if (!taskData.title) {
             throw new Error('Task title is required');
         }
+        
+        // 🔧 NEW: Make user assignment required
+        if (!taskData.assigned_to) {
+            throw new Error('Please assign the task to a user');
+        }
+        
+        console.log('Task data being sent:', taskData); // Debug log
         
         const response = await fetch(`/api/projects/${currentProjectId}/tasks`, {
             method: 'POST',

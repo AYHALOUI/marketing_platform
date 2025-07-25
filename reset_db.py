@@ -21,11 +21,11 @@ def reset_database():
         
         # Create test employee
         employee = User(
-            username='sara',
-            email='sara@marketing.com',
+            username='rim',
+            email='rim@marketing.com',
             role='employee'
         )
-        employee.set_password('password123')
+        employee.set_password('rim123')
         
         try:
             db.session.add(admin)
@@ -33,7 +33,7 @@ def reset_database():
             db.session.commit()
             print("✅ Database reset successfully!")
             print("✅ Created admin user: admin/admin123")
-            print("✅ Created employee user: sara/password123")
+            print("✅ Created employee user: rim/rim123")
         except Exception as e:
             print(f"❌ Error: {e}")
 

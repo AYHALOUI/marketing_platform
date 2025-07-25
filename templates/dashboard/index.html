@@ -874,63 +874,92 @@
             document.getElementById('projectDueDate').setAttribute('min', today);
             document.getElementById('taskDueDate').setAttribute('min', today);
         });
-
-        // Load clients and users for project form
+        
         async function loadProjectFormData() {
-            try {
-                // Load clients
-                const clientsResponse = await fetch('/api/clients/');
-                const clientsData = await clientsResponse.json();
-                
-                const clientSelect = document.getElementById('projectClient');
-                clientSelect.innerHTML = '<option value="">Select Client...</option>';
-                
-                if (clientsData.clients) {
-                    clientsData.clients.forEach(client => {
-                        clientSelect.innerHTML += `<option value="${client.id}">${client.name} (${client.company})</option>`;
-                    });
-                }
-                
-                // Load users (simulate since we don't have a users endpoint)
-                const userSelect = document.getElementById('projectAssignedTo');
-                userSelect.innerHTML = '<option value="">Select User...</option>';
-                userSelect.innerHTML += `<option value="1">admin (Admin)</option>`;
-                userSelect.innerHTML += `<option value="2">sara (Employee)</option>`;
-                
-            } catch (error) {
-                console.error('Error loading project form data:', error);
-                showAlert('Error loading form data', 'danger');
-            }
+    try {
+        // Load clients
+        const clientsResponse = await fetch('/api/clients/');
+        const clientsData = await clientsResponse.json();
+        
+        const clientSelect = document.getElementById('projectClient');
+        clientSelect.innerHTML = '<option value="">Select Client...</option>';
+        
+        if (clientsData.clients) {
+            clientsData.clients.forEach(client => {
+                clientSelect.innerHTML += `<option value="${client.id}">${client.name} (${client.company})</option>`;
+            });
         }
-
-        // Load projects and users for task form
-        async function loadTaskFormData() {
-            try {
-                // Load projects
-                const projectsResponse = await fetch('/api/projects/');
-                const projectsData = await projectsResponse.json();
-                
-                const projectSelect = document.getElementById('taskProject');
-                projectSelect.innerHTML = '<option value="">Select Project...</option>';
-                
-                if (projectsData.projects) {
-                    projectsData.projects.forEach(project => {
-                        projectSelect.innerHTML += `<option value="${project.id}">${project.name}</option>`;
-                    });
-                }
-                
-                // Load users for task assignment
-                const taskUserSelect = document.getElementById('taskAssignedTo');
-                taskUserSelect.innerHTML = '<option value="">Select User...</option>';
-                taskUserSelect.innerHTML += `<option value="admin">admin</option>`;
-                taskUserSelect.innerHTML += `<option value="sara">sara</option>`;
-                
-            } catch (error) {
-                console.error('Error loading task form data:', error);
-                showAlert('Error loading form data', 'danger');
-            }
+        
+        // Load users with improved validation
+        const usersResponse = await fetch('/api/users/');
+        const usersData = await usersResponse.json();
+        
+        const userSelect = document.getElementById('projectAssignedTo');
+        userSelect.innerHTML = '<option value="">-- Select User (Required) --</option>';
+        
+        if (usersData.users && usersData.users.length > 0) {
+            usersData.users.forEach(user => {
+                userSelect.innerHTML += `<option value="${user.id}">${user.username} (${user.role.charAt(0).toUpperCase() + user.role.slice(1)})</option>`;
+            });
+        } else {
+            userSelect.innerHTML += '<option value="" disabled>No users available</option>';
         }
+        
+        // Add visual validation to the select
+        userSelect.addEventListener('change', function() {
+            if (this.value === '') {
+                this.style.borderColor = '#dc3545'; // Red border
+                this.style.boxShadow = '0 0 0 0.2rem rgba(220, 53, 69, 0.25)';
+            } else {
+                this.style.borderColor = '#28a745'; // Green border
+                this.style.boxShadow = '0 0 0 0.2rem rgba(40, 167, 69, 0.25)';
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error loading project form data:', error);
+        showAlert('Error loading form data', 'danger');
+        
+        // Fallback
+        const userSelect = document.getElementById('projectAssignedTo');
+        userSelect.innerHTML = '<option value="">Error loading users - please refresh</option>';
+    }
+}
 
+// Also update the loadTaskFormData function to load real users
+async function loadTaskFormData() {
+    try {
+        // Load projects
+        const projectsResponse = await fetch('/api/projects/');
+        const projectsData = await projectsResponse.json();
+        
+        const projectSelect = document.getElementById('taskProject');
+        projectSelect.innerHTML = '<option value="">Select Project...</option>';
+        
+        if (projectsData.projects) {
+            projectsData.projects.forEach(project => {
+                projectSelect.innerHTML += `<option value="${project.id}">${project.name}</option>`;
+            });
+        }
+        
+        // 🔧 FIXED: Load real users for task assignment
+        const usersResponse = await fetch('/api/users/');
+        const usersData = await usersResponse.json();
+        
+        const taskUserSelect = document.getElementById('taskAssignedTo');
+        taskUserSelect.innerHTML = '<option value="">Select User...</option>';
+        
+        if (usersData.users) {
+            usersData.users.forEach(user => {
+                taskUserSelect.innerHTML += `<option value="${user.username}">${user.username} (${user.role.charAt(0).toUpperCase() + user.role.slice(1)})</option>`;
+            });
+        }
+        
+    } catch (error) {
+        console.error('Error loading task form data:', error);
+        showAlert('Error loading form data', 'danger');
+    }
+}
         // Handle client creation
         async function handleCreateClient(event) {
             event.preventDefault();
@@ -984,60 +1013,65 @@
 
         // Handle project creation
         async function handleCreateProject(event) {
-            event.preventDefault();
-            
-            const submitBtn = event.target.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Creating...';
-            submitBtn.disabled = true;
-            
-            try {
-                const projectData = {
-                    name: document.getElementById('projectName').value.trim(),
-                    description: document.getElementById('projectDescription').value.trim(),
-                    status: document.getElementById('projectStatus').value,
-                    client_id: document.getElementById('projectClient').value || null,
-                    assigned_to: parseInt(document.getElementById('projectAssignedTo').value),
-                    due_date: document.getElementById('projectDueDate').value || null
-                };
-                
-                if (!projectData.name) {
-                    throw new Error('Project name is required');
-                }
-                
-                if (!projectData.assigned_to) {
-                    throw new Error('Please assign the project to a user');
-                }
-                
-                const response = await fetch('/api/projects/', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(projectData)
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
-                    showAlert(`✅ Project "${data.project.name}" created successfully!`, 'success');
-                    
-                    // Close modal and reset form
-                    bootstrap.Modal.getInstance(document.getElementById('createProjectModal')).hide();
-                    createProjectForm.reset();
-                    
-                    // Refresh the page to show updated stats
-                    setTimeout(() => window.location.reload(), 1500);
-                    
-                } else {
-                    throw new Error(data.error || 'Failed to create project');
-                }
-                
-            } catch (error) {
-                showAlert('Error creating project: ' + error.message, 'danger');
-            } finally {
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
-            }
+    event.preventDefault();
+    
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Creating...';
+    submitBtn.disabled = true;
+    
+    try {
+        const projectData = {
+            name: document.getElementById('projectName').value.trim(),
+            description: document.getElementById('projectDescription').value.trim(),
+            status: document.getElementById('projectStatus').value,
+            client_id: document.getElementById('projectClient').value || null,
+            assigned_to: parseInt(document.getElementById('projectAssignedTo').value),
+            due_date: document.getElementById('projectDueDate').value || null
+        };
+        
+        // Validation checks
+        if (!projectData.name) {
+            throw new Error('Project name is required');
         }
+        
+        // 🔧 FIXED: Better validation for user assignment
+        if (!projectData.assigned_to || isNaN(projectData.assigned_to)) {
+            throw new Error('Please select a user to assign the project to');
+        }
+        
+        console.log('Project data being sent:', projectData); // Debug log
+        
+        const response = await fetch('/api/projects/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(projectData)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showAlert(`✅ Project "${data.project.name}" created successfully!`, 'success');
+            
+            // Close modal and reset form
+            bootstrap.Modal.getInstance(document.getElementById('createProjectModal')).hide();
+            createProjectForm.reset();
+            
+            // Refresh the page to show updated stats
+            setTimeout(() => window.location.reload(), 1500);
+            
+        } else {
+            throw new Error(data.error || 'Failed to create project');
+        }
+        
+    } catch (error) {
+        showAlert('Error creating project: ' + error.message, 'danger');
+        console.error('Project creation error:', error); // Debug log
+    } finally {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+}
 
         // Handle task creation
         async function handleAddTask(event) {

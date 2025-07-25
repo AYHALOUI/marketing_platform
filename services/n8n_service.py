@@ -60,8 +60,21 @@ class N8NService:
             
         except Exception as e:
             print(f"📝 Failed to log automation trigger: {str(e)}")
-          
-    # Specific workflow triggers
+    
+    # 🆕 NEW METHOD FOR USER REGISTRATION
+    def user_registered(self, user_data):
+        """Trigger when a new user registers - Send welcome email"""
+        return self.trigger_workflow('user_registered', {
+            'user_id': user_data.get('id'),
+            'username': user_data.get('username'),
+            'email': user_data.get('email'),
+            'role': user_data.get('role'),
+            'registration_date': user_data.get('registration_date'),
+            'platform_url': 'http://localhost:5000',  # Your platform URL
+            'support_email': 'support@tm-holding.ma'
+        })
+    
+    # Existing methods
     def client_created(self, client_data):
         """Trigger when a new client is created"""
         return self.trigger_workflow('client_created', {

@@ -44,6 +44,7 @@ def create_app():
     from routes.homepage import homepage_bp
     from routes.clients import clients_bp
     from routes.n8n_webhooks import n8n_bp
+    from routes.users import users_bp  # ADD THIS LINE
 
 
     app.register_blueprint(auth_bp)
@@ -51,7 +52,8 @@ def create_app():
     app.register_blueprint(tasks_bp)
     app.register_blueprint(homepage_bp)
     app.register_blueprint(clients_bp)
-    app.register_blueprint(n8n_bp) 
+    app.register_blueprint(n8n_bp)
+    app.register_blueprint(users_bp)  # ADD THIS LINE
     
     @app.route('/auth/login')
     def login():
