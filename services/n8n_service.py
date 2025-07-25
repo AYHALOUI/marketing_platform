@@ -98,14 +98,19 @@ class N8NService:
     
 
     def task_created(self, task_data):
-        """Trigger when a new task is created"""
+        """Trigger when a new task is created - Send notification to assigned user"""
         return self.trigger_workflow('task_created', {
             'task_id': task_data.get('id'),
             'task_title': task_data.get('title'),
+            'task_description': task_data.get('description'),
             'project_name': task_data.get('project_name'),
+            'project_id': task_data.get('project_id'),
             'assigned_to': task_data.get('assigned_to'),
+            'assigned_user_email': task_data.get('assigned_user_email'),  # ADD THIS
             'due_date': task_data.get('due_date'),
-            'status': task_data.get('status')
+            'status': task_data.get('status'),
+            'created_by': task_data.get('created_by'),  # ADD THIS
+            'platform_url': 'http://localhost:5000'
         }, project_id=task_data.get('project_id'))
     
     def task_completed(self, task_data):

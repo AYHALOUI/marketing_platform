@@ -280,8 +280,8 @@
                                 <label for="taskAssignedTo" class="form-label">
                                     <i class="bi bi-person me-1"></i>Assigned To
                                 </label>
-                                <select class="form-select" id="taskAssignedTo">
-                                    <option value="">Select User...</option>
+                                <select class="form-select" id="taskAssignedTo" required>
+                                    <option value="">-- Select User (Required) --</option>
                                 </select>
                             </div>
                         </div>
@@ -356,7 +356,7 @@ async function loadUsersForTask() {
         
         const select = document.getElementById('taskAssignedTo');
         if (select) {
-            select.innerHTML = '<option value="">-- Select User (Optional) --</option>';
+            select.innerHTML = '<option value="">-- Select User (Required) --</option>';
             
             if (data.users && data.users.length > 0) {
                 data.users.forEach(user => {

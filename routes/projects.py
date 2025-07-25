@@ -183,6 +183,14 @@ def add_task_to_project(project_id):
         if not data or not data.get('title'):
             return jsonify({'error': 'Task title is required'}), 400
         
+        if not data.get('assigned_to'):
+            return jsonify({'error': 'Please assign the task to a user'}), 400
+        
+        # 🔧 GET THE ASSIGNED USER'S EMAIL
+        assigned_user = User.query.filter_by(username=data.get('assigned_to')).first()
+        if not assigned_user:
+            return jsonify({'error': 'Assigned user not found'}), 400
+        
         # Parse due_date if provided
         due_date = None
         if data.get('due_date'):
@@ -203,24 +211,26 @@ def add_task_to_project(project_id):
         db.session.add(task)
         db.session.commit()
         
-        # 🚀 TRIGGER N8N WORKFLOW FOR NEW TASK
+        # 🚀 TRIGGER N8N WORKFLOW WITH USER EMAIL
         task_data = {
             'id': task.id,
             'title': task.title,
+            'description': task.description,
             'project_name': project.name,
             'project_id': project.id,
             'assigned_to': task.assigned_to,
+            'assigned_user_email': assigned_user.email,  # ADD THIS
             'due_date': task.due_date.isoformat() if task.due_date else None,
-            'status': task.status
+            'status': task.status,
+            'created_by': current_user.username  # ADD THIS
         }
         
         # Trigger N8N workflow asynchronously
         try:
             n8n_service.task_created(task_data)
-            print(f"🤖 N8N workflow triggered for new task: {task.title}")
+            print(f"🤖 N8N workflow triggered for new task: {task.title} → {assigned_user.email}")
         except Exception as n8n_error:
             print(f"⚠️ N8N trigger failed for task {task.title}: {str(n8n_error)}")
-            # Don't fail the task creation if N8N fails
         
         return jsonify({
             'message': 'Task added successfully',

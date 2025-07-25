@@ -757,90 +757,92 @@
     </div>
 
     <!-- Add Task Modal -->
-    <div class="modal fade" id="addTaskModal" tabindex="-1" aria-labelledby="addTaskModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addTaskModalLabel">
-                        <i class="fas fa-tasks me-2"></i>Add Task
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form id="addTaskForm">
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col-md-8">
-                                <div class="mb-3">
-                                    <label for="taskTitle" class="form-label">
-                                        <i class="fas fa-edit me-1"></i>Task Title *
-                                    </label>
-                                    <input type="text" class="form-control" id="taskTitle" required placeholder="e.g., Create landing page design">
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label for="taskStatus" class="form-label">
-                                        <i class="fas fa-gear me-1"></i>Status
-                                    </label>
-                                    <select class="form-select" id="taskStatus">
-                                        <option value="todo">To Do</option>
-                                        <option value="in_progress">In Progress</option>
-                                        <option value="completed">Completed</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="taskDescription" class="form-label">
-                                <i class="fas fa-align-left me-1"></i>Description
-                            </label>
-                            <textarea class="form-control" id="taskDescription" rows="3" placeholder="Describe the task details..."></textarea>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label for="taskProject" class="form-label">
-                                        <i class="fas fa-project-diagram me-1"></i>Project *
-                                    </label>
-                                    <select class="form-select" id="taskProject" required>
-                                        <option value="">Select Project...</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label for="taskAssignedTo" class="form-label">
-                                        <i class="fas fa-user me-1"></i>Assigned To
-                                    </label>
-                                    <select class="form-select" id="taskAssignedTo">
-                                        <option value="">Select User...</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label for="taskDueDate" class="form-label">
-                                        <i class="fas fa-calendar me-1"></i>Due Date
-                                    </label>
-                                    <input type="date" class="form-control" id="taskDueDate">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            <i class="fas fa-times me-1"></i>Cancel
-                        </button>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-plus me-1"></i>Add Task
-                        </button>
-                    </div>
-                </form>
+<div class="modal fade" id="addTaskModal" tabindex="-1" aria-labelledby="addTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addTaskModalLabel">
+                    <i class="fas fa-tasks me-2"></i>Add Task
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
+            <form id="addTaskForm">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="taskTitle" class="form-label">
+                                    <i class="fas fa-edit me-1"></i>Task Title *
+                                </label>
+                                <input type="text" class="form-control" id="taskTitle" required 
+                                       placeholder="e.g., Create landing page design">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="taskStatus" class="form-label">
+                                    <i class="fas fa-gear me-1"></i>Status
+                                </label>
+                                <select class="form-select" id="taskStatus">
+                                    <option value="todo">To Do</option>
+                                    <option value="in_progress">In Progress</option>
+                                    <option value="completed">Completed</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="taskDescription" class="form-label">
+                            <i class="fas fa-align-left me-1"></i>Description
+                        </label>
+                        <textarea class="form-control" id="taskDescription" rows="3" 
+                                  placeholder="Describe the task details..."></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="taskProject" class="form-label">
+                                    <i class="fas fa-project-diagram me-1"></i>Project *
+                                </label>
+                                <select class="form-select" id="taskProject" required>
+                                    <option value="">Select Project...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="taskAssignedTo" class="form-label">
+                                    <i class="fas fa-user me-1"></i>Assign To *
+                                </label>
+                                <select class="form-select" id="taskAssignedTo" required>
+                                    <option value="">-- Select User (Required) --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="taskDueDate" class="form-label">
+                                    <i class="fas fa-calendar me-1"></i>Due Date
+                                </label>
+                                <input type="date" class="form-control" id="taskDueDate">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Add Task
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -947,7 +949,7 @@ async function loadTaskFormData() {
         const usersData = await usersResponse.json();
         
         const taskUserSelect = document.getElementById('taskAssignedTo');
-        taskUserSelect.innerHTML = '<option value="">Select User...</option>';
+        taskUserSelect.innerHTML = '<option value="">Select User </option>';
         
         if (usersData.users) {
             usersData.users.forEach(user => {
@@ -1076,31 +1078,36 @@ async function loadTaskFormData() {
         // Handle task creation
         async function handleAddTask(event) {
             event.preventDefault();
+        
+        const submitBtn = event.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Adding...';
+        submitBtn.disabled = true;
+        
+        try {
+            const taskData = {
+                title: document.getElementById('taskTitle').value.trim(),
+                description: document.getElementById('taskDescription').value.trim(),
+                status: document.getElementById('taskStatus').value,
+                assigned_to: document.getElementById('taskAssignedTo').value.trim(),
+                due_date: document.getElementById('taskDueDate').value || null
+            };
             
-            const submitBtn = event.target.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Adding...';
-            submitBtn.disabled = true;
+            const projectId = document.getElementById('taskProject').value;
             
-            try {
-                const taskData = {
-                    title: document.getElementById('taskTitle').value.trim(),
-                    description: document.getElementById('taskDescription').value.trim(),
-                    status: document.getElementById('taskStatus').value,
-                    assigned_to: document.getElementById('taskAssignedTo').value.trim(),
-                    due_date: document.getElementById('taskDueDate').value || null
-                };
-                
-                const projectId = document.getElementById('taskProject').value;
-                
-                if (!taskData.title) {
-                    throw new Error('Task title is required');
-                }
-                
-                if (!projectId) {
-                    throw new Error('Please select a project for this task');
-                }
-                
+            // VALIDATION CHECKS (like your project form)
+            if (!taskData.title) {
+                throw new Error('Task title is required');
+            }
+            
+            if (!projectId) {
+                throw new Error('Please select a project for this task');
+            }
+            
+            if (!taskData.assigned_to) {
+                throw new Error('Please assign the task to a user');
+            }
+                    
                 const response = await fetch(`/api/projects/${projectId}/tasks`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
