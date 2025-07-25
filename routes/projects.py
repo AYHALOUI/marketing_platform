@@ -306,8 +306,6 @@ def delete_project(project_id):
     
     try:
         project = Project.query.get_or_404(project_id)
-        
-        # Delete project (cascades to tasks due to relationship setup)
         db.session.delete(project)
         db.session.commit()
         
