@@ -290,55 +290,61 @@
                 <div class="card-body">
                     <div id="recentProjectsList">
                         {% if client.projects %}
-                            {% for project in client.projects[:4] %}
-                            <div class="project-item mb-3 clickable" onclick="viewProjectDetails({{ project.id }})" data-project-id="{{ project.id }}">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div class="flex-grow-1">
-                                        <h6 class="mb-1 project-title" style="font-weight: 600;">{{ project.name }}</h6>
-                                        <p class="mb-2 text-muted project-description" style="font-size: 0.85rem;">
-                                            {{ project.description[:100] }}{% if project.description|length > 100 %}...{% endif %}
-                                        </p>
-                                        <div class="d-flex align-items-center gap-3">
-                                            <span class="badge project-status-badge {% if project.status == 'active' %}bg-success{% elif project.status == 'completed' %}bg-primary{% else %}bg-warning{% endif %}">
-                                                {{ project.status.upper() }}
-                                            </span>
-                                            <small class="text-muted">
-                                                <i class="bi bi-calendar me-1"></i>
-                                                {% if project.due_date %}
-                                                    {{ project.due_date.strftime('%b %d, %Y') }}
-                                                {% else %}
-                                                    No due date
-                                                {% endif %}
-                                            </small>
-                                            <small class="text-muted">
-                                                <i class="bi bi-list-task me-1"></i>{{ project.task_count }} tasks
-                                            </small>
-                                        </div>
-                                        <div class="progress mt-2" style="height: 6px;">
-                                            <div class="progress-bar bg-success" style="width: {{ project.progress }}%"></div>
-                                        </div>
-                                        <small class="text-muted">{{ project.progress }}% complete</small>
-                                    </div>
-                                    <div class="project-actions">
-                                        <button class="btn btn-outline-primary btn-sm" onclick="event.stopPropagation(); viewProjectDetails({{ project.id }})">
-                                            <i class="bi bi-arrow-right"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            {% if not loop.last %}<hr class="my-3">{% endif %}
-                            {% endfor %}
+    {% for project in client.projects %}
+    <div class="project-item mb-3 clickable" onclick="viewProjectDetails({{ project.id }})" data-project-id="{{ project.id }}">
+        <div class="d-flex justify-content-between align-items-start">
+            <div class="flex-grow-1">
+                <h6 class="mb-1 project-title" style="font-weight: 600;">{{ project.name }}</h6>
+                <p class="mb-2 text-muted project-description" style="font-size: 0.85rem;">
+                    {{ project.description[:100] }}{% if project.description and project.description|length > 100 %}...{% endif %}
+                </p>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="badge project-status-badge {% if project.status == 'active' %}bg-success{% elif project.status == 'completed' %}bg-primary{% else %}bg-warning{% endif %}">
+                        {{ project.status.upper() }}
+                    </span>
+                    <small class="text-muted">
+                        <i class="bi bi-calendar me-1"></i>
+                        {% if project.due_date %}
+                            <!-- 🔧 FIX: Handle date as string, not datetime object -->
+                            {% set date_parts = project.due_date.split('T')[0].split('-') %}
+                            {% set year = date_parts[0] %}
+                            {% set month = date_parts[1] %}
+                            {% set day = date_parts[2] %}
+                            {% set month_names = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] %}
+                            {{ month_names[month|int] }} {{ day|int }}, {{ year }}
                         {% else %}
-                            <div class="text-center py-4">
-                                <i class="bi bi-folder" style="font-size: 2rem; color: #6b7280;"></i>
-                                <p class="text-muted mt-2">No projects yet</p>
-                                {% if current_user.is_admin() %}
-                                <button class="btn btn-success btn-sm" onclick="createNewProject()">
-                                    <i class="bi bi-plus-circle me-1"></i>Create First Project
-                                </button>
-                                {% endif %}
-                            </div>
+                            No due date
                         {% endif %}
+                    </small>
+                    <small class="text-muted">
+                        <i class="bi bi-list-task me-1"></i>{{ project.task_count }} tasks
+                    </small>
+                </div>
+                <div class="progress mt-2" style="height: 6px;">
+                    <div class="progress-bar bg-success" style="width: {{ project.progress }}%"></div>
+                </div>
+                <small class="text-muted">{{ project.progress }}% complete</small>
+            </div>
+            <div class="project-actions">
+                <button class="btn btn-outline-primary btn-sm" onclick="event.stopPropagation(); viewProjectDetails({{ project.id }})">
+                    <i class="bi bi-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    {% if not loop.last %}<hr class="my-3">{% endif %}
+    {% endfor %}
+{% else %}
+    <div class="text-center py-4">
+        <i class="bi bi-folder" style="font-size: 2rem; color: #6b7280;"></i>
+        <p class="text-muted mt-2">No projects yet</p>
+        {% if current_user.is_admin() %}
+        <button class="btn btn-success btn-sm" onclick="createNewProject()">
+            <i class="bi bi-plus-circle me-1"></i>Create First Project
+        </button>
+        {% endif %}
+    </div>
+{% endif %}
                     </div>
                 </div>
             </div>

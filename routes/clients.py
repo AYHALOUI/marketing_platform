@@ -87,6 +87,8 @@ def get_clients():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# Update your routes/clients.py file - specifically the get_client_details function
+
 @clients_bp.route('/<int:client_id>', methods=['GET'])
 @login_required
 def get_client_details(client_id):
@@ -120,6 +122,8 @@ def get_client_details(client_id):
             'project_count': len(projects_data)
         }
         
+        # 🔧 FIX: Pass the client_data as JSON to the template
+        # The template is expecting a client object but we're passing client_data
         return render_template('client/details.html', client=client_data)
         
     except Exception as e:
