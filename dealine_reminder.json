@@ -1,0 +1,194 @@
+{
+    "name": "Task Deadline Notifications",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "task_deadline_approaching",
+          "responseMode": "lastNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          -80,
+          200
+        ],
+        "id": "deadline-webhook",
+        "name": "Deadline Webhook",
+        "webhookId": "deadline-notification-webhook"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "task-data",
+                "name": "task_title",
+                "value": "={{ $json.body.data.task_title }}",
+                "type": "string"
+              },
+              {
+                "id": "user-email",
+                "name": "assigned_user_email",
+                "value": "={{ $json.body.data.assigned_user_email }}",
+                "type": "string"
+              },
+              {
+                "id": "due-date",
+                "name": "due_date",
+                "value": "={{ $json.body.data.due_date }}",
+                "type": "string"
+              },
+              {
+                "id": "days-until",
+                "name": "days_until_deadline",
+                "value": "={{ $json.body.data.days_until_deadline }}",
+                "type": "number"
+              },
+              {
+                "id": "priority",
+                "name": "priority",
+                "value": "={{ $json.body.data.priority }}",
+                "type": "string"
+              },
+              {
+                "id": "project-name",
+                "name": "project_name",
+                "value": "={{ $json.body.data.project_name }}",
+                "type": "string"
+              },
+              {
+                "id": "dashboard-url",
+                "name": "dashboard_url",
+                "value": "={{ $json.body.data.dashboard_url }}",
+                "type": "string"
+              },
+              {
+                "id": "urgency",
+                "name": "urgency_level",
+                "value": "={{ $json.body.data.urgency_level }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          200,
+          200
+        ],
+        "id": "extract-data",
+        "name": "Extract Data"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "urgent-condition",
+                "leftValue": "={{ $json.urgency_level }}",
+                "rightValue": "urgent",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              },
+              {
+                "id": "critical-condition",
+                "leftValue": "={{ $json.urgency_level }}",
+                "rightValue": "critical",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "or"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          480,
+          200
+        ],
+        "id": "check-urgency",
+        "name": "Check Urgency"
+      },
+      {
+        "parameters": {
+          "toEmail": "={{ $json.assigned_user_email }}",
+          "subject": "🚨 URGENT: Task Deadline Alert - {{ $json.task_title }}",
+          "html": "=<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ef4444; border-radius: 12px; background: linear-gradient(135deg, #fef2f2, #fff);\">\n  <div style=\"text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #ef4444, #dc2626); border-radius: 8px; color: white;\">\n    <h1 style=\"margin: 0 0 10px 0; font-size: 1.8rem;\">🚨 URGENT TASK DEADLINE</h1>\n    <p style=\"margin: 0; opacity: 0.9; font-size: 1.1rem;\">Immediate Action Required!</p>\n  </div>\n  \n  <div style=\"background: #fff; padding: 25px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ef4444;\">\n    <h2 style=\"color: #dc2626; margin: 0 0 15px 0; font-size: 1.4rem;\">📋 {{ $json.task_title }}</h2>\n    <div style=\"margin-bottom: 15px;\">\n      <strong style=\"color: #374151;\">Project:</strong> {{ $json.project_name }}\n    </div>\n    <div style=\"margin-bottom: 15px;\">\n      <strong style=\"color: #374151;\">Due Date:</strong> <span style=\"color: #ef4444; font-weight: bold;\">{{ $json.due_date }}</span>\n    </div>\n    <div style=\"margin-bottom: 15px;\">\n      <strong style=\"color: #374151;\">Days Until Deadline:</strong> \n      <span style=\"background: #ef4444; color: white; padding: 4px 12px; border-radius: 16px; font-weight: bold;\">{{ $json.days_until_deadline }} days</span>\n    </div>\n    <div style=\"background: #fef2f2; padding: 15px; border-radius: 8px; border: 1px solid #fecaca;\">\n      <h3 style=\"color: #dc2626; margin: 0 0 10px 0; font-size: 1.1rem;\">⚡ Priority: {{ $json.priority | upper }}</h3>\n      <p style=\"margin: 0; color: #7f1d1d;\">This task requires immediate attention to meet the deadline!</p>\n    </div>\n  </div>\n  \n  <div style=\"text-align: center; margin: 30px 0;\">\n    <a href=\"{{ $json.dashboard_url }}\" style=\"background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 1.1rem; display: inline-block;\">\n      🚀 View Task Now\n    </a>\n  </div>\n  \n  <div style=\"border-top: 1px solid #e5e7eb; padding-top: 20px; text-align: center; color: #9ca3af; font-size: 14px;\">\n    <p>This is an automated deadline reminder from your Marketing Platform</p>\n    <p style=\"margin: 5px 0;\">📧 TM Holding Marketing Team</p>\n  </div>\n</div>",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          760,
+          120
+        ],
+        "id": "urgent-email",
+        "name": "Urgent Email",
+        "credentials": {
+          "smtp": {
+            "id": "your-smtp-credentials",
+            "name": "SMTP account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "toEmail": "={{ $json.assigned_user_email }}",
+          "subject": "📅 Task Deadline Reminder - {{ $json.task_title }}",
+          "html": "=<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #f59e0b; border-radius: 12px; background: linear-gradient(135deg, #fffbeb, #fff);\">\n  <div style=\"text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 8px; color: white;\">\n    <h1 style=\"margin: 0 0 10px 0; font-size: 1.6rem;\">📅 Task Deadline Reminder</h1>\n    <p style=\"margin: 0; opacity: 0.9;\">Don't forget about your upcoming task!</p>\n  </div>\n  \n  <div style=\"background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #f59e0b;\">\n    <h2 style=\"color: #d97706; margin: 0 0 15px 0;\">📋 {{ $json.task_title }}</h2>\n    <div style=\"margin-bottom: 10px;\">\n      <strong>Project:</strong> {{ $json.project_name }}\n    </div>\n    <div style=\"margin-bottom: 10px;\">\n      <strong>Due Date:</strong> {{ $json.due_date }}\n    </div>\n    <div style=\"margin-bottom: 15px;\">\n      <strong>Days Until Deadline:</strong> \n      <span style=\"background: #f59e0b; color: white; padding: 2px 8px; border-radius: 12px;\">{{ $json.days_until_deadline }} days</span>\n    </div>\n  </div>\n  \n  <div style=\"text-align: center; margin: 25px 0;\">\n    <a href=\"{{ $json.dashboard_url }}\" style=\"background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;\">\n      📝 View Task\n    </a>\n  </div>\n  \n  <div style=\"border-top: 1px solid #e5e7eb; padding-top: 15px; text-align: center; color: #9ca3af; font-size: 14px;\">\n    <p>Marketing Platform - Task Management System</p>\n  </div>\n</div>",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          760,
+          280
+        ],
+        "id": "normal-email",
+        "name": "Normal Reminder Email",
+        "credentials": {
+          "smtp": {
+            "id": "your-smtp-credentials",
+            "name": "SMTP account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "task_overdue",
+          "responseMode": "lastNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          -80,
+          500
+        ],
+        "id": "overdue-webhook",
+        "name": "Overdue Webhook",
+        "webhookId": "overdue-task-webhook"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "overdue-task",
+                "name": "task_title",

@@ -1,4 +1,4 @@
-# Create this file as services/n8n_service.py
+# Updated services/n8n_service.py - Add these methods
 
 import requests
 import json
@@ -61,7 +61,7 @@ class N8NService:
         except Exception as e:
             print(f"📝 Failed to log automation trigger: {str(e)}")
     
-    # 🆕 NEW METHOD FOR USER REGISTRATION
+    # Existing methods...
     def user_registered(self, user_data):
         """Trigger when a new user registers - Send welcome email"""
         return self.trigger_workflow('user_registered', {
@@ -70,11 +70,10 @@ class N8NService:
             'email': user_data.get('email'),
             'role': user_data.get('role'),
             'registration_date': user_data.get('registration_date'),
-            'platform_url': 'http://localhost:5000',  # Your platform URL
+            'platform_url': 'http://localhost:5000',
             'support_email': 'support@tm-holding.ma'
         })
     
-    # Existing methods
     def client_created(self, client_data):
         """Trigger when a new client is created"""
         return self.trigger_workflow('client_created', {
@@ -96,7 +95,6 @@ class N8NService:
             'status': project_data.get('status')
         }, project_id=project_data.get('id'))
     
-
     def task_created(self, task_data):
         """Trigger when a new task is created - Send notification to assigned user"""
         return self.trigger_workflow('task_created', {
@@ -106,22 +104,52 @@ class N8NService:
             'project_name': task_data.get('project_name'),
             'project_id': task_data.get('project_id'),
             'assigned_to': task_data.get('assigned_to'),
-            'assigned_user_email': task_data.get('assigned_user_email'),  # ADD THIS
+            'assigned_user_email': task_data.get('assigned_user_email'),
             'due_date': task_data.get('due_date'),
             'status': task_data.get('status'),
-            'created_by': task_data.get('created_by'),  # ADD THIS
+            'created_by': task_data.get('created_by'),
             'platform_url': 'http://localhost:5000'
         }, project_id=task_data.get('project_id'))
     
-    def task_completed(self, task_data):
-        """Trigger when a task is completed"""
-        return self.trigger_workflow('task_completed', {
-            'task_id': task_data.get('id'),
-            'task_title': task_data.get('title'),
-            'project_name': task_data.get('project_name'),
-            'assigned_to': task_data.get('assigned_to'),
-            'completed_at': datetime.utcnow().isoformat()
-        }, project_id=task_data.get('project_id'))
+    # NEW DEADLINE-RELATED METHODS
+    def task_deadline_approaching(self, notification_data):
+        """Trigger when a task deadline is approaching"""
+        return self.trigger_workflow('task_deadline_approaching', {
+            'task_id': notification_data.get('task_id'),
+            'task_title': notification_data.get('task_title'),
+            'task_description': notification_data.get('task_description'),
+            'project_name': notification_data.get('project_name'),
+            'project_id': notification_data.get('project_id'),
+            'assigned_to': notification_data.get('assigned_to'),
+            'assigned_user_email': notification_data.get('assigned_user_email'),
+            'due_date': notification_data.get('due_date'),
+            'days_until_deadline': notification_data.get('days_until_deadline'),
+            'deadline_label': notification_data.get('deadline_label'),
+            'priority': notification_data.get('priority'),
+            'status': notification_data.get('status'),
+            'dashboard_url': notification_data.get('dashboard_url'),
+            'notification_type': 'deadline_warning',
+            'urgency_level': self._get_urgency_level(notification_data.get('days_until_deadline', 0))
+        }, project_id=notification_data.get('project_id'))
+    
+    def task_overdue(self, notification_data):
+        """Trigger when a task is overdue"""
+        return self.trigger_workflow('task_overdue', {
+            'task_id': notification_data.get('task_id'),
+            'task_title': notification_data.get('task_title'),
+            'task_description': notification_data.get('task_description'),
+            'project_name': notification_data.get('project_name'),
+            'project_id': notification_data.get('project_id'),
+            'assigned_to': notification_data.get('assigned_to'),
+            'assigned_user_email': notification_data.get('assigned_user_email'),
+            'due_date': notification_data.get('due_date'),
+            'days_overdue': notification_data.get('days_overdue'),
+            'priority': 'urgent',
+            'status': notification_data.get('status'),
+            'dashboard_url': notification_data.get('dashboard_url'),
+            'notification_type': 'overdue_alert',
+            'escalation_required': notification_data.get('days_overdue', 0) > 3
+        }, project_id=notification_data.get('project_id'))
     
     def project_deadline_approaching(self, project_data, days_until_deadline):
         """Trigger when project deadline is approaching"""
@@ -131,8 +159,26 @@ class N8NService:
             'client_name': project_data.get('client_name'),
             'due_date': project_data.get('due_date'),
             'days_until_deadline': days_until_deadline,
-            'progress': project_data.get('progress', 0)
+            'progress': project_data.get('progress', 0),
+            'total_tasks': project_data.get('total_tasks', 0),
+            'completed_tasks': project_data.get('completed_tasks', 0),
+            'pending_tasks': project_data.get('pending_tasks', 0),
+            'owner': project_data.get('owner'),
+            'dashboard_url': f"http://localhost:5000/project/{project_data.get('id')}",
+            'urgency_level': self._get_urgency_level(days_until_deadline)
         }, project_id=project_data.get('id'))
+    
+    def task_completed(self, task_data):
+        """Trigger when a task is completed"""
+        return self.trigger_workflow('task_completed', {
+            'task_id': task_data.get('id'),
+            'task_title': task_data.get('title'),
+            'project_name': task_data.get('project_name'),
+            'assigned_to': task_data.get('assigned_to'),
+            'completed_at': datetime.utcnow().isoformat(),
+            'was_on_time': task_data.get('was_on_time', True),
+            'completion_time': task_data.get('completion_time')
+        }, project_id=task_data.get('project_id'))
     
     def project_completed(self, project_data):
         """Trigger when a project is completed"""
@@ -142,8 +188,22 @@ class N8NService:
             'client_name': project_data.get('client_name'),
             'completed_at': datetime.utcnow().isoformat(),
             'total_tasks': project_data.get('total_tasks', 0),
-            'duration_days': project_data.get('duration_days', 0)
+            'duration_days': project_data.get('duration_days', 0),
+            'was_on_time': project_data.get('was_on_time', True)
         }, project_id=project_data.get('id'))
+    
+    def _get_urgency_level(self, days_until):
+        """Get urgency level based on days until deadline"""
+        if days_until <= 0:
+            return 'critical'
+        elif days_until <= 1:
+            return 'urgent'
+        elif days_until <= 3:
+            return 'high'
+        elif days_until <= 7:
+            return 'medium'
+        else:
+            return 'low'
 
 # Create singleton instance
 n8n_service = N8NService()
