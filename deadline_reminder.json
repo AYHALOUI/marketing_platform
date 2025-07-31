@@ -1,0 +1,128 @@
+{
+    "name": "Simple Task Email Reminders",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "task_reminder",
+          "responseMode": "lastNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          -80,
+          200
+        ],
+        "id": "task-reminder-webhook",
+        "name": "Task Reminder Webhook",
+        "webhookId": "simple-task-reminder"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "task-title",
+                "name": "task_title",
+                "value": "={{ $json.body.task_title }}",
+                "type": "string"
+              },
+              {
+                "id": "user-email",
+                "name": "user_email",
+                "value": "={{ $json.body.user_email }}",
+                "type": "string"
+              },
+              {
+                "id": "due-date",
+                "name": "due_date",
+                "value": "={{ $json.body.due_date }}",
+                "type": "string"
+              },
+              {
+                "id": "days-until",
+                "name": "days_until",
+                "value": "={{ $json.body.days_until }}",
+                "type": "number"
+              },
+              {
+                "id": "project-name",
+                "name": "project_name",
+                "value": "={{ $json.body.project_name }}",
+                "type": "string"
+              },
+              {
+                "id": "task-url",
+                "name": "task_url",
+                "value": "={{ $json.body.task_url }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          200,
+          200
+        ],
+        "id": "extract-data",
+        "name": "Extract Data"
+      },
+      {
+        "parameters": {
+          "toEmail": "={{ $json.user_email }}",
+          "subject": "⏰ Task Reminder: {{ $json.task_title }}",
+          "html": "<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <style>\n        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }\n        .container { max-width: 600px; margin: 0 auto; padding: 20px; }\n        .header { background: #2563eb; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }\n        .content { background: white; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }\n        .task-info { background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; }\n        .button { background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; }\n        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <div class=\"header\">\n            <h1 style=\"margin: 0;\">⏰ Task Reminder</h1>\n            <p style=\"margin: 10px 0 0;\">You have a task due soon!</p>\n        </div>\n        \n        <div class=\"content\">\n            <h2 style=\"color: #1f2937; margin-top: 0;\">{{ $json.task_title }}</h2>\n            \n            <div class=\"task-info\">\n                <p><strong>Project:</strong> {{ $json.project_name }}</p>\n                <p><strong>Due Date:</strong> {{ $json.due_date }}</p>\n                <p><strong>Days Until Due:</strong> {{ $json.days_until }} day(s)</p>\n            </div>\n            \n            <p>Hi there! 👋</p>\n            <p>This is a friendly reminder that your task \"<strong>{{ $json.task_title }}</strong>\" is due in {{ $json.days_until }} day(s).</p>\n            \n            <p style=\"text-align: center; margin: 30px 0;\">\n                <a href=\"{{ $json.task_url }}\" class=\"button\">View Task</a>\n            </p>\n            \n            <p>If you have any questions or need help, please don't hesitate to reach out!</p>\n            \n            <div class=\"footer\">\n                <p>Best regards,<br>Marketing Platform Team</p>\n                <p><small>This is an automated reminder. Please do not reply to this email.</small></p>\n            </div>\n        </div>\n    </div>\n</body>\n</html>",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          480,
+          200
+        ],
+        "id": "send-email",
+        "name": "Send Email Reminder",
+        "credentials": {
+          "smtp": {
+            "id": "YOUR_SMTP_CREDENTIAL_ID",
+            "name": "Email Account"
+          }
+        }
+      }
+    ],
+    "pinData": {},
+    "connections": {
+      "Task Reminder Webhook": {
+        "main": [
+          [
+            {
+              "node": "Extract Data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract Data": {
+        "main": [
+          [
+            {
+              "node": "Send Email Reminder",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "active": false,
+    "settings": {
+      "executionOrder": "v1"
+    },
+    "id": "SimpleTaskReminders",
+    "tags": ["simple", "email", "reminders"]
+  }
