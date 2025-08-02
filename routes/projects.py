@@ -40,6 +40,8 @@ def get_projects():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
+
 @projects_bp.route('/<int:project_id>', methods=['GET'])
 @login_required
 def get_project(project_id):
@@ -65,6 +67,17 @@ def get_project(project_id):
                 'is_overdue': task.is_overdue()
             })
         
+        # ✅ ADD CLIENT DATA HERE
+        client_data = None
+        if project.client:
+            client_data = {
+                'id': project.client.id,
+                'name': project.client.name,
+                'company': project.client.company,
+                'email': project.client.email,
+                'sector': project.client.sector
+            }
+        
         project_data = {
             'id': project.id,
             'name': project.name,
@@ -76,7 +89,8 @@ def get_project(project_id):
             'owner_id': project.user_id,
             'progress': project.get_progress(),
             'tasks': tasks_data,
-            'task_count': len(tasks_data)
+            'task_count': len(tasks_data),
+            'client': client_data  # ✅ ADD THIS LINE
         }
         
         return jsonify(project_data), 200

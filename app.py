@@ -160,6 +160,11 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+
+
+
+
+
 # Initialize extensions
 login_manager = LoginManager()
 
@@ -208,6 +213,12 @@ def create_app():
     app.register_blueprint(n8n_bp)
     app.register_blueprint(users_bp)
     app.register_blueprint(deadline_api)  # NEW: Register deadline API
+
+    # Add this import to your app.py file (around line 25)
+    from routes.reports import reports_bp
+
+    # Add this line with your other blueprint registrations (around line 45)
+    app.register_blueprint(reports_bp)
     
     @app.route('/auth/login')
     def login():
@@ -436,14 +447,14 @@ def create_app():
     with app.app_context():
         db.create_all()
         
-        # NEW: Start deadline monitoring service in background (optional)
-        if os.getenv('START_DEADLINE_SERVICE', 'false').lower() == 'true':
-            try:
-                from routes.deadline_monitor import start_deadline_monitor
-                start_deadline_monitor()
-                print("✅ Deadline monitoring service started in background")
-            except Exception as e:
-                print(f"⚠️ Could not start deadline monitoring service: {e}")
+        # # NEW: Start deadline monitoring service in background (optional)
+        # if os.getenv('START_DEADLINE_SERVICE', 'false').lower() == 'true':
+        #     try:
+        #         from routes.deadline_monitor import start_deadline_monitor
+        #         start_deadline_monitor()
+        #         print("✅ Deadline monitoring service started in background")
+        #     except Exception as e:
+        #         print(f"⚠️ Could not start deadline monitoring service: {e}")
     
     return app
 

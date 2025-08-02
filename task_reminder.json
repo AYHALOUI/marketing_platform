@@ -1,0 +1,55 @@
+{
+    "name": "Simple Task Reminder",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "task_reminder",
+          "responseMode": "lastNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [100, 200],
+        "id": "webhook",
+        "name": "Webhook"
+      },
+      {
+        "parameters": {
+          "fromEmail": "noreply@yourcompany.com",
+          "toEmail": "={{ $json.body.user_email }}",
+          "subject": "Task Reminder: {{ $json.body.task_title }}",
+          "message": "Hi!\n\nReminder: Your task \"{{ $json.body.task_title }}\" is due {{ $json.body.due_date }}.\n\nProject: {{ $json.body.project_name }}\nDays until due: {{ $json.body.days_until }}\n\nView task: {{ $json.body.task_url }}\n\nBest regards,\nYour Team",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [400, 200],
+        "id": "email",
+        "name": "Send Email",
+        "credentials": {
+          "smtp": {
+            "id": "YOUR_SMTP_ID",
+            "name": "SMTP Account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Send Email",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "active": true,
+    "settings": {
+      "executionOrder": "v1"
+    }
+  }
