@@ -1,0 +1,216 @@
+{
+    "name": "Task Deadline Reminders",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "task_reminder",
+          "responseMode": "lastNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          -80,
+          200
+        ],
+        "id": "webhook-task-reminder",
+        "name": "Task Reminder Webhook",
+        "webhookId": "task-reminder-webhook"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "task-title-assignment",
+                "name": "task_title",
+                "value": "={{ $json.body.task_title }}",
+                "type": "string"
+              },
+              {
+                "id": "user-email-assignment",
+                "name": "user_email",
+                "value": "={{ $json.body.user_email }}",
+                "type": "string"
+              },
+              {
+                "id": "due-date-assignment",
+                "name": "due_date",
+                "value": "={{ $json.body.due_date }}",
+                "type": "string"
+              },
+              {
+                "id": "days-until-assignment",
+                "name": "days_until",
+                "value": "={{ $json.body.days_until }}",
+                "type": "number"
+              },
+              {
+                "id": "project-name-assignment",
+                "name": "project_name",
+                "value": "={{ $json.body.project_name }}",
+                "type": "string"
+              },
+              {
+                "id": "task-url-assignment",
+                "name": "task_url",
+                "value": "={{ $json.body.task_url }}",
+                "type": "string"
+              },
+              {
+                "id": "notification-type-assignment",
+                "name": "notification_type",
+                "value": "={{ $json.body.notification_type || 'deadline_reminder' }}",
+                "type": "string"
+              },
+              {
+                "id": "urgency-assignment",
+                "name": "urgency_level",
+                "value": "={{ $json.body.urgency_level || 'medium' }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          200,
+          200
+        ],
+        "id": "extract-task-data",
+        "name": "Extract Task Data"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "urgency-check",
+                "leftValue": "={{ $json.urgency_level }}",
+                "rightValue": "critical",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          480,
+          200
+        ],
+        "id": "check-urgency",
+        "name": "Check Urgency Level"
+      },
+      {
+        "parameters": {
+          "toEmail": "={{ $json.user_email }}",
+          "subject": "🚨 URGENT: Task \"{{ $json.task_title }}\" is Overdue!",
+          "html": "<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Urgent Task Reminder</title>\n    <style>\n        body { font-family: 'Arial', sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }\n        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 0 20px rgba(0,0,0,0.1); }\n        .header { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 30px 20px; text-align: center; }\n        .header h1 { margin: 0; font-size: 28px; font-weight: bold; }\n        .header p { margin: 10px 0 0; opacity: 0.9; font-size: 16px; }\n        .content { padding: 30px 20px; }\n        .task-info { background: #fef2f2; border-left: 4px solid #ef4444; padding: 20px; margin: 20px 0; border-radius: 0 8px 8px 0; }\n        .task-info h3 { color: #dc2626; margin: 0 0 15px; font-size: 20px; }\n        .info-row { display: flex; justify-content: space-between; margin: 8px 0; }\n        .info-label { font-weight: bold; color: #555; }\n        .info-value { color: #333; }\n        .cta-button { display: inline-block; background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 15px 30px; text-decoration: none; border-radius: 50px; font-weight: bold; margin: 20px 0; text-align: center; transition: all 0.3s ease; }\n        .cta-button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4); }\n        .footer { background: #f9fafb; padding: 20px; text-align: center; color: #666; font-size: 14px; border-top: 1px solid #e5e7eb; }\n        .urgent-banner { background: #fef2f2; border: 2px solid #ef4444; border-radius: 8px; padding: 15px; margin: 20px 0; text-align: center; }\n        .urgent-banner strong { color: #dc2626; font-size: 18px; }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <div class=\"header\">\n            <h1>🚨 URGENT TASK ALERT</h1>\n            <p>This task requires immediate attention!</p>\n        </div>\n        \n        <div class=\"content\">\n            <div class=\"urgent-banner\">\n                <strong>⚠️ OVERDUE TASK NOTIFICATION ⚠️</strong>\n                <p style=\"margin: 10px 0 0; color: #dc2626;\">This task is past its deadline and needs immediate action.</p>\n            </div>\n            \n            <div class=\"task-info\">\n                <h3>{{ $json.task_title }}</h3>\n                <div class=\"info-row\">\n                    <span class=\"info-label\">📁 Project:</span>\n                    <span class=\"info-value\">{{ $json.project_name }}</span>\n                </div>\n                <div class=\"info-row\">\n                    <span class=\"info-label\">📅 Original Due Date:</span>\n                    <span class=\"info-value\">{{ $json.due_date }}</span>\n                </div>\n                <div class=\"info-row\">\n                    <span class=\"info-label\">⏰ Days Overdue:</span>\n                    <span class=\"info-value\" style=\"color: #dc2626; font-weight: bold;\">{{ Math.abs($json.days_until) }} day(s)</span>\n                </div>\n                <div class=\"info-row\">\n                    <span class=\"info-label\">🔥 Priority Level:</span>\n                    <span class=\"info-value\" style=\"color: #dc2626; font-weight: bold;\">CRITICAL</span>\n                </div>\n            </div>\n            \n            <p><strong>Hi there! 👋</strong></p>\n            <p>This is an <strong style=\"color: #dc2626;\">URGENT REMINDER</strong> that your task \"<strong>{{ $json.task_title }}</strong>\" is now <strong style=\"color: #dc2626;\">{{ Math.abs($json.days_until) }} day(s) overdue</strong>.</p>\n            \n            <p>⚡ <strong>Immediate action required:</strong></p>\n            <ul style=\"color: #555; margin-left: 20px;\">\n                <li>Review the task details immediately</li>\n                <li>Update the task status or deadline</li>\n                <li>Contact your project manager if needed</li>\n                <li>Prioritize this task in your workflow</li>\n            </ul>\n            \n            <div style=\"text-align: center; margin: 30px 0;\">\n                <a href=\"{{ $json.task_url }}\" class=\"cta-button\">🚀 TAKE ACTION NOW</a>\n            </div>\n            \n            <p style=\"background: #fffbeb; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0;\">\n                <strong>💡 Need Help?</strong><br>\n                If you're facing any blockers or need assistance, please reach out to your team lead or project manager immediately.\n            </p>\n        </div>\n        \n        <div class=\"footer\">\n            <p><strong>Marketing Platform Team</strong></p>\n            <p>📧 This is an automated urgent notification | 🚫 Please do not reply to this email</p>\n            <p style=\"margin: 10px 0 0;\">Need support? Contact us at <a href=\"mailto:support@tm-holding.ma\">support@tm-holding.ma</a></p>\n        </div>\n    </div>\n</body>\n</html>",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          760,
+          100
+        ],
+        "id": "send-urgent-email",
+        "name": "Send Urgent Email",
+        "credentials": {
+          "smtp": {
+            "id": "YOUR_SMTP_CREDENTIAL_ID",
+            "name": "SMTP Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "toEmail": "={{ $json.user_email }}",
+          "subject": "⏰ Task Reminder: \"{{ $json.task_title }}\" - Due {{ $json.days_until > 0 ? 'in ' + $json.days_until + ' day(s)' : 'today' }}",
+          "html": "<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Task Reminder</title>\n    <style>\n        body { font-family: 'Arial', sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }\n        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 0 20px rgba(0,0,0,0.1); }\n        .header { background: linear-gradient(135deg, #6366f1, #ec4899); color: white; padding: 30px 20px; text-align: center; }\n        .header h1 { margin: 0; font-size: 28px; font-weight: bold; }\n        .header p { margin: 10px 0 0; opacity: 0.9; font-size: 16px; }\n        .content { padding: 30px 20px; }\n        .task-info { background: linear-gradient(135deg, #f8fafc, #f1f5f9); border-left: 4px solid #6366f1; padding: 20px; margin: 20px 0; border-radius: 0 8px 8px 0; }\n        .task-info h3 { color: #1f2937; margin: 0 0 15px; font-size: 20px; }\n        .info-row { display: flex; justify-content: space-between; margin: 8px 0; }\n        .info-label { font-weight: bold; color: #555; }\n        .info-value { color: #333; }\n        .cta-button { display: inline-block; background: linear-gradient(135deg, #6366f1, #ec4899); color: white; padding: 15px 30px; text-decoration: none; border-radius: 50px; font-weight: bold; margin: 20px 0; text-align: center; transition: all 0.3s ease; }\n        .cta-button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(99, 102, 241, 0.4); }\n        .footer { background: #f9fafb; padding: 20px; text-align: center; color: #666; font-size: 14px; border-top: 1px solid #e5e7eb; }\n        .priority-badge { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; text-transform: uppercase; }\n        .priority-high { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }\n        .priority-medium { background: #fffbeb; color: #d97706; border: 1px solid #fed7aa; }\n        .priority-low { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <div class=\"header\">\n            <h1>⏰ Task Reminder</h1>\n            <p>Don't forget about your upcoming task!</p>\n        </div>\n        \n        <div class=\"content\">\n            <h2 style=\"color: #1f2937; margin-top: 0;\">{{ $json.task_title }}</h2>\n            \n            <div class=\"task-info\">\n                <div class=\"info-row\">\n                    <span class=\"info-label\">📁 Project:</span>\n                    <span class=\"info-value\">{{ $json.project_name }}</span>\n                </div>\n                <div class=\"info-row\">\n                    <span class=\"info-label\">📅 Due Date:</span>\n                    <span class=\"info-value\">{{ $json.due_date }}</span>\n                </div>\n                <div class=\"info-row\">\n                    <span class=\"info-label\">⏰ Time Remaining:</span>\n                    <span class=\"info-value\">{{ $json.days_until === 0 ? 'Due today!' : ($json.days_until === 1 ? 'Due tomorrow' : 'Due in ' + $json.days_until + ' days') }}</span>\n                </div>\n                <div class=\"info-row\">\n                    <span class=\"info-label\">🔥 Priority:</span>\n                    <span class=\"info-value\">\n                        <span class=\"priority-badge priority-{{ $json.urgency_level === 'urgent' ? 'high' : ($json.urgency_level === 'high' ? 'high' : 'medium') }}\">\n                            {{ $json.urgency_level }}\n                        </span>\n                    </span>\n                </div>\n            </div>\n            \n            <p><strong>Hi there! 👋</strong></p>\n            <p>This is a friendly reminder that your task \"<strong>{{ $json.task_title }}</strong>\" is {{ $json.days_until === 0 ? 'due today' : ($json.days_until === 1 ? 'due tomorrow' : 'due in ' + $json.days_until + ' days') }}.</p>\n            \n            <p>{{ $json.days_until <= 1 ? '⚡ This task is due very soon! Please prioritize it in your workflow.' : '📋 Please make sure to allocate time for this task in your schedule.' }}</p>\n            \n            <div style=\"text-align: center; margin: 30px 0;\">\n                <a href=\"{{ $json.task_url }}\" class=\"cta-button\">📝 View Task Details</a>\n            </div>\n            \n            <p style=\"background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0;\">\n                <strong>💡 Pro Tip:</strong> Update your task status as you make progress to keep your team informed!\n            </p>\n            \n            <p>If you have any questions or need help with this task, please don't hesitate to reach out to your team lead.</p>\n        </div>\n        \n        <div class=\"footer\">\n            <p><strong>Best regards,</strong><br>Marketing Platform Team</p>\n            <p>📧 This is an automated reminder | 🚫 Please do not reply to this email</p>\n            <p style=\"margin: 10px 0 0;\">Need support? Contact us at <a href=\"mailto:support@tm-holding.ma\">support@tm-holding.ma</a></p>\n        </div>\n    </div>\n</body>\n</html>",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          760,
+          300
+        ],
+        "id": "send-normal-email",
+        "name": "Send Normal Reminder",
+        "credentials": {
+          "smtp": {
+            "id": "YOUR_SMTP_CREDENTIAL_ID",
+            "name": "SMTP Account"
+          }
+        }
+      }
+    ],
+    "pinData": {},
+    "connections": {
+      "Task Reminder Webhook": {
+        "main": [
+          [
+            {
+              "node": "Extract Task Data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract Task Data": {
+        "main": [
+          [
+            {
+              "node": "Check Urgency Level",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Urgency Level": {
+        "main": [
+          [
+            {
+              "node": "Send Urgent Email",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Send Normal Reminder",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "active": true,
+    "settings": {
+      "executionOrder": "v1"
+    },
+    "versionId": "",
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "id": "TaskDeadlineReminders",
+    "tags": ["reminders", "tasks", "deadlines", "email"]
+  }
