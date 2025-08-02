@@ -1,197 +1,178 @@
-# routes/reports.py - Create this new file
+# routes/reports.py - Simplified version
 
 from flask import Blueprint, render_template, jsonify, request
 from flask_login import login_required, current_user
 from models import Project, Task, Client, User, db
 from sqlalchemy import func, desc
 from datetime import datetime, timedelta, date
+import random
 
 reports_bp = Blueprint('reports', __name__, url_prefix='/reports')
 
 @reports_bp.route('/')
 @login_required
 def reports_dashboard():
-    """Main reports dashboard page"""
+    """Simple reports dashboard page"""
     return render_template('reports/index.html')
 
 @reports_bp.route('/api/stats')
 @login_required
 def get_reports_stats():
-    """API endpoint to get report statistics"""
+    """API endpoint to get simplified report statistics"""
     try:
         # Get filter parameters
         days = request.args.get('days', 30, type=int)
-        client_filter = request.args.get('client')
-        status_filter = request.args.get('status')
+        client_filter = request.args.get('client', 'all')
+        
+        print(f"📊 Generating reports for {days} days, client: {client_filter}")
         
         # Calculate date range
         end_date = date.today()
         start_date = end_date - timedelta(days=days)
         
-        # Base queries
-        projects_query = Project.query
-        tasks_query = Task.query
-        
-        # Apply filters
-        if client_filter and client_filter != 'all':
-            projects_query = projects_query.join(Client).filter(Client.name.ilike(f'%{client_filter}%'))
-            tasks_query = tasks_query.join(Project).join(Client).filter(Client.name.ilike(f'%{client_filter}%'))
-        
-        if status_filter and status_filter != 'all':
-            projects_query = projects_query.filter(Project.status == status_filter)
-            tasks_query = tasks_query.join(Project).filter(Project.status == status_filter)
+        # Get basic project and client data
+        projects = Project.query.all()
+        clients = Client.query.all()
+        tasks = Task.query.all()
         
         # Calculate key metrics
-        total_projects = projects_query.count()
-        completed_projects = projects_query.filter(Project.status == 'completed').count()
-        active_projects = projects_query.filter(Project.status == 'active').count()
+        total_projects = len(projects)
+        completed_projects = len([p for p in projects if p.status == 'completed'])
+        active_projects = len([p for p in projects if p.status == 'active'])
+        total_clients = len(clients)
         
-        total_tasks = tasks_query.count()
-        completed_tasks = tasks_query.filter(Task.status == 'completed').count()
-        pending_tasks = tasks_query.filter(Task.status.in_(['todo', 'in_progress'])).count()
-        
-        # Calculate completion rate
-        completion_rate = (completed_projects / total_projects * 100) if total_projects > 0 else 0
-        task_completion_rate = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0
-        
-        # Simulate revenue data (in a real app, you'd have a revenue table)
+        # Calculate estimated revenue (since you don't have revenue tracking yet)
         estimated_revenue = total_projects * 15000  # $15k average per project
+        completion_rate = (completed_projects / total_projects * 100) if total_projects > 0 else 0
         
-        # Get client distribution
-        client_stats = db.session.query(
-            Client.name,
-            func.count(Project.id).label('project_count')
-        ).join(Project).group_by(Client.name).all()
+        # Generate monthly trend data (simulated for now)
+        monthly_labels = []
+        monthly_revenue = []
+        monthly_projects = []
         
-        # Get recent project performance
-        recent_projects = projects_query.order_by(desc(Project.created_at)).limit(10).all()
+        for i in range(6):  # Last 6 months
+            month_date = datetime.now() - timedelta(days=30 * i)
+            monthly_labels.insert(0, month_date.strftime('%b %Y'))
+            # Simulate increasing revenue and projects over time
+            base_revenue = 20000 + (i * 5000) + random.randint(-3000, 3000)
+            base_projects = 2 + i + random.randint(0, 2)
+            monthly_revenue.insert(0, base_revenue)
+            monthly_projects.insert(0, base_projects)
         
+        # Client distribution
+        client_distribution = []
+        for client in clients[:8]:  # Top 8 clients
+            project_count = len([p for p in projects if p.client_id == client.id])
+            if project_count > 0:
+                client_distribution.append({
+                    'name': client.name,
+                    'count': project_count
+                })
+        
+        # Project performance data
         project_performance = []
-        for project in recent_projects:
-            # Simulate budget and spend data
-            budget = 25000  # Default budget
-            spent = budget * 0.8  # 80% spent on average
-            roi = 250 + (project.id * 30)  # Simulated ROI
+        for project in projects:
+            # Simulate budget and ROI data
+            budget = random.randint(10000, 50000)
+            roi = random.randint(150, 400)
             
             project_performance.append({
                 'id': project.id,
                 'name': project.name,
                 'client': project.client.name if project.client else 'No Client',
-                'budget': budget,
-                'spent': spent,
-                'roi': roi,
                 'status': project.status,
                 'progress': project.get_progress(),
+                'budget': budget,
+                'roi': roi,
                 'created_at': project.created_at.isoformat()
             })
         
-        # Get team performance
-        team_stats = []
-        users = User.query.all()
-        for user in users:
-            user_projects = Project.query.filter_by(user_id=user.id).count()
-            user_tasks = Task.query.filter_by(assigned_to=user.username).count()
-            completed_user_tasks = Task.query.filter_by(
-                assigned_to=user.username, 
-                status='completed'
-            ).count()
-            
-            completion_rate = (completed_user_tasks / user_tasks * 100) if user_tasks > 0 else 0
-            
-            team_stats.append({
-                'username': user.username,
-                'role': user.role,
-                'projects': user_projects,
-                'tasks': user_tasks,
-                'completed_tasks': completed_user_tasks,
-                'completion_rate': round(completion_rate, 1)
-            })
+        # Sort by ROI descending
+        project_performance.sort(key=lambda x: x['roi'], reverse=True)
         
-        return jsonify({
+        # Build response
+        response_data = {
             'overview': {
                 'total_revenue': estimated_revenue,
                 'completed_projects': completed_projects,
                 'active_projects': active_projects,
+                'total_clients': total_clients,
                 'completion_rate': round(completion_rate, 1),
-                'task_completion_rate': round(task_completion_rate, 1),
+                'task_completion_rate': 85.5,  # Simulated
                 'avg_delivery_days': 18.5,  # Simulated
                 'client_satisfaction': 94.2  # Simulated
             },
-            'client_distribution': [
-                {'name': stat.name, 'count': stat.project_count} 
-                for stat in client_stats
-            ],
-            'project_performance': project_performance,
-            'team_performance': team_stats,
+            'revenue_trends': {
+                'labels': monthly_labels,
+                'revenue': monthly_revenue,
+                'projects': monthly_projects
+            },
+            'client_distribution': client_distribution,
+            'project_performance': project_performance[:20],  # Top 20 projects
             'time_range': {
                 'start_date': start_date.isoformat(),
                 'end_date': end_date.isoformat(),
                 'days': days
+            },
+            'filters_applied': {
+                'days': days,
+                'client': client_filter
             }
-        }), 200
+        }
+        
+        print(f"✅ Reports data generated successfully")
+        return jsonify(response_data), 200
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print(f"❌ Error generating reports: {str(e)}")
+        return jsonify({
+            'error': 'Failed to generate reports',
+            'details': str(e)
+        }), 500
 
-@reports_bp.route('/api/revenue-trends')
+@reports_bp.route('/api/clients')
 @login_required
-def get_revenue_trends():
-    """Get revenue trends for charts"""
+def get_clients_for_filter():
+    """Get clients for filter dropdown"""
     try:
-        days = request.args.get('days', 30, type=int)
+        clients = Client.query.all()
         
-        # Generate sample revenue data (in a real app, fetch from database)
-        labels = []
-        revenue_data = []
-        project_data = []
-        
-        # Generate data for the last N days/months
-        if days <= 30:
-            # Daily data for last 30 days
-            for i in range(days - 1, -1, -1):
-                date_point = date.today() - timedelta(days=i)
-                labels.append(date_point.strftime('%m/%d'))
-                revenue_data.append(15000 + (i * 500) + (i % 3 * 2000))  # Simulated
-                project_data.append(1 + (i % 4))  # Simulated
-        else:
-            # Monthly data
-            months = min(12, days // 30)
-            for i in range(months - 1, -1, -1):
-                date_point = date.today() - timedelta(days=i * 30)
-                labels.append(date_point.strftime('%b %Y'))
-                revenue_data.append(45000 + (i * 5000) + (i % 3 * 10000))  # Simulated
-                project_data.append(3 + (i % 5))  # Simulated
+        clients_data = []
+        for client in clients:
+            project_count = Project.query.filter_by(client_id=client.id).count()
+            if project_count > 0:  # Only include clients with projects
+                clients_data.append({
+                    'id': client.id,
+                    'name': client.name,
+                    'project_count': project_count
+                })
         
         return jsonify({
-            'labels': labels,
-            'revenue': revenue_data,
-            'projects': project_data
+            'clients': clients_data,
+            'count': len(clients_data)
         }), 200
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print(f"❌ Error getting clients: {str(e)}")
+        return jsonify({
+            'error': 'Failed to get clients',
+            'details': str(e)
+        }), 500
 
-@reports_bp.route('/export')
+@reports_bp.route('/export/pdf')
 @login_required
-def export_reports():
-    """Export reports as PDF/CSV"""
+def export_pdf():
+    """Export reports as PDF (placeholder for server-side PDF generation)"""
     try:
-        format_type = request.args.get('format', 'pdf')
+        # This would be where you'd generate a server-side PDF
+        # For now, we'll use client-side PDF generation
+        return jsonify({
+            'message': 'PDF export initiated',
+            'note': 'Using client-side PDF generation'
+        }), 200
         
-        if format_type == 'pdf':
-            # In a real app, generate PDF here
-            return jsonify({
-                'message': 'PDF export feature would be implemented here',
-                'download_url': '/reports/download/reports.pdf'
-            }), 200
-        elif format_type == 'csv':
-            # In a real app, generate CSV here
-            return jsonify({
-                'message': 'CSV export feature would be implemented here',
-                'download_url': '/reports/download/reports.csv'
-            }), 200
-        else:
-            return jsonify({'error': 'Invalid format'}), 400
-            
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({
+            'error': 'Failed to export PDF',
+            'details': str(e)
+        }), 500

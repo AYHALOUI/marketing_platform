@@ -4,141 +4,115 @@
 
 {% block content %}
 <div class="container-fluid">
-    <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4 fade-in">
+    <!-- Simple Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="h3 mb-2" style="font-weight: 800; background: linear-gradient(135deg, #6366f1, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-                📊 Reports & Analytics
+            <h1 class="h3 mb-2" style="font-weight: 800; color: #1f2937;">
+                📊 Marketing Reports
             </h1>
-            <p class="text-muted mb-0" style="font-size: 1.1rem;">Comprehensive insights into your marketing performance</p>
+            <p class="text-muted mb-0">Overview of your marketing performance</p>
         </div>
         <div>
-            <button class="btn btn-success me-2" onclick="exportAllReports()">
-                <i class="bi bi-download me-2"></i>Export All
+            <button class="btn btn-success me-2" onclick="exportToPDF()">
+                <i class="bi bi-file-earmark-pdf me-1"></i>Export PDF
             </button>
-            <button class="btn btn-outline-primary" onclick="refreshReports()">
-                <i class="bi bi-arrow-clockwise me-2"></i>Refresh Data
+            <button class="btn btn-outline-primary" onclick="refreshData()">
+                <i class="bi bi-arrow-clockwise me-1"></i>Refresh
             </button>
         </div>
     </div>
 
-    <!-- Filter Controls -->
-    <div class="card border-0 mb-4 fade-in">
-        <div class="card-body" style="padding: 1.5rem;">
+    <!-- Simple Filter Bar -->
+    <div class="card mb-4" style="border-radius: 12px; border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+        <div class="card-body py-3">
             <div class="row align-items-center">
                 <div class="col-md-3">
-                    <label class="form-label fw-bold">📅 Time Period</label>
                     <select class="form-select" id="timePeriod" onchange="updateReports()">
-                        <option value="7">Last 7 Days</option>
                         <option value="30" selected>Last 30 Days</option>
                         <option value="90">Last 3 Months</option>
                         <option value="365">Last Year</option>
-                        <option value="custom">Custom Range</option>
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label fw-bold">🏢 Client Filter</label>
                     <select class="form-select" id="clientFilter" onchange="updateReports()">
                         <option value="all">All Clients</option>
-                        <option value="tesla">Tesla</option>
-                        <option value="nike">Nike</option>
-                        <option value="apple">Apple</option>
+                        <!-- Will be populated dynamically -->
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-bold">📋 Project Status</label>
-                    <select class="form-select" id="statusFilter" onchange="updateReports()">
-                        <option value="all">All Projects</option>
-                        <option value="active">Active Only</option>
-                        <option value="completed">Completed Only</option>
-                        <option value="paused">Paused</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-bold">👤 Team Member</label>
-                    <select class="form-select" id="userFilter" onchange="updateReports()">
-                        <option value="all">All Team Members</option>
-                        <option value="rimzaki">rimzaki</option>
-                        <option value="admin">admin</option>
-                    </select>
+                <div class="col-md-6">
+                    <div class="text-end">
+                        <small class="text-muted">Last updated: <span id="lastUpdated">Just now</span></small>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Key Metrics Cards -->
-    <div class="row mb-4">
+    <!-- Key Stats Cards -->
+    <div class="row mb-4" id="statsCards">
         <div class="col-md-3 mb-3">
-            <div class="card border-0 h-100" style="background: linear-gradient(135deg, #6366f1, #818cf8); color: white;">
-                <div class="card-body text-center">
-                    <i class="bi bi-graph-up" style="font-size: 2.5rem; margin-bottom: 1rem;"></i>
-                    <h3 class="mb-1" id="totalRevenue">$127,450</h3>
-                    <p class="mb-1">Total Revenue</p>
-                    <small class="opacity-75">+23% vs last period</small>
+            <div class="card text-center" style="border: none; border-radius: 15px; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white;">
+                <div class="card-body py-4">
+                    <i class="bi bi-cash-stack" style="font-size: 2.5rem; margin-bottom: 1rem;"></i>
+                    <h3 id="totalRevenue" class="mb-1">$0</h3>
+                    <p class="mb-0 opacity-90">Total Revenue</p>
                 </div>
             </div>
         </div>
         <div class="col-md-3 mb-3">
-            <div class="card border-0 h-100" style="background: linear-gradient(135deg, #10b981, #34d399); color: white;">
-                <div class="card-body text-center">
+            <div class="card text-center" style="border: none; border-radius: 15px; background: linear-gradient(135deg, #10b981, #059669); color: white;">
+                <div class="card-body py-4">
                     <i class="bi bi-check-circle" style="font-size: 2.5rem; margin-bottom: 1rem;"></i>
-                    <h3 class="mb-1" id="completedProjects">8</h3>
-                    <p class="mb-1">Completed Projects</p>
-                    <small class="opacity-75">+12% completion rate</small>
+                    <h3 id="completedProjects" class="mb-1">0</h3>
+                    <p class="mb-0 opacity-90">Completed Projects</p>
                 </div>
             </div>
         </div>
         <div class="col-md-3 mb-3">
-            <div class="card border-0 h-100" style="background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white;">
-                <div class="card-body text-center">
-                    <i class="bi bi-clock-history" style="font-size: 2.5rem; margin-bottom: 1rem;"></i>
-                    <h3 class="mb-1" id="avgDeliveryTime">18.5</h3>
-                    <p class="mb-1">Avg Delivery (Days)</p>
-                    <small class="opacity-75">-2.3 days improvement</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card border-0 h-100" style="background: linear-gradient(135deg, #ec4899, #f472b6); color: white;">
-                <div class="card-body text-center">
+            <div class="card text-center" style="border: none; border-radius: 15px; background: linear-gradient(135deg, #f59e0b, #d97706); color: white;">
+                <div class="card-body py-4">
                     <i class="bi bi-people" style="font-size: 2.5rem; margin-bottom: 1rem;"></i>
-                    <h3 class="mb-1" id="clientSatisfaction">94%</h3>
-                    <p class="mb-1">Client Satisfaction</p>
-                    <small class="opacity-75">+8% increase</small>
+                    <h3 id="totalClients" class="mb-1">0</h3>
+                    <p class="mb-0 opacity-90">Active Clients</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center" style="border: none; border-radius: 15px; background: linear-gradient(135deg, #ef4444, #dc2626); color: white;">
+                <div class="card-body py-4">
+                    <i class="bi bi-graph-up" style="font-size: 2.5rem; margin-bottom: 1rem;"></i>
+                    <h3 id="averageROI" class="mb-1">0%</h3>
+                    <p class="mb-0 opacity-90">Average ROI</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Charts Row -->
+    <!-- Charts Section -->
     <div class="row mb-4">
-        <!-- Revenue Trend Chart -->
+        <!-- Monthly Revenue Chart -->
         <div class="col-lg-8 mb-4">
-            <div class="card border-0">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">
-                        <i class="bi bi-graph-up me-2" style="color: #6366f1;"></i>Revenue & Project Trends
+            <div class="card" style="border: none; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                <div class="card-header bg-white" style="border-radius: 15px 15px 0 0;">
+                    <h5 class="mb-0">
+                        <i class="bi bi-bar-chart me-2" style="color: #6366f1;"></i>
+                        Monthly Performance
                     </h5>
-                    <button class="btn btn-outline-primary btn-sm" onclick="downloadChart('revenueChart')">
-                        <i class="bi bi-download"></i>
-                    </button>
                 </div>
                 <div class="card-body">
-                    <canvas id="revenueChart" height="300"></canvas>
+                    <canvas id="monthlyChart" height="300"></canvas>
                 </div>
             </div>
         </div>
 
-        <!-- Client Distribution -->
+        <!-- Client Breakdown -->
         <div class="col-lg-4 mb-4">
-            <div class="card border-0">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">
-                        <i class="bi bi-pie-chart me-2" style="color: #ec4899;"></i>Client Revenue Share
+            <div class="card" style="border: none; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                <div class="card-header bg-white" style="border-radius: 15px 15px 0 0;">
+                    <h5 class="mb-0">
+                        <i class="bi bi-pie-chart me-2" style="color: #ec4899;"></i>
+                        Client Revenue Share
                     </h5>
-                    <button class="btn btn-outline-primary btn-sm" onclick="downloadChart('clientChart')">
-                        <i class="bi bi-download"></i>
-                    </button>
                 </div>
                 <div class="card-body">
                     <canvas id="clientChart" height="250"></canvas>
@@ -147,198 +121,147 @@
         </div>
     </div>
 
-    <!-- Detailed Reports Tables -->
-    <div class="row">
-        <!-- Project Performance Table -->
-        <div class="col-lg-8 mb-4">
-            <div class="card border-0">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">
-                        <i class="bi bi-table me-2" style="color: #10b981;"></i>Project Performance Report
-                    </h5>
-                    <button class="btn btn-outline-success btn-sm" onclick="exportTable('projectTable', 'project_performance.csv')">
-                        <i class="bi bi-file-earmark-excel me-1"></i>Export CSV
-                    </button>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover" id="projectTable">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Project</th>
-                                    <th>Client</th>
-                                    <th>Budget</th>
-                                    <th>Spent</th>
-                                    <th>ROI</th>
-                                    <th>Status</th>
-                                    <th>Completion</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><strong>Tesla Model Y Campaign</strong></td>
-                                    <td>Tesla</td>
-                                    <td>$25,000</td>
-                                    <td>$22,800</td>
-                                    <td class="text-success">+340%</td>
-                                    <td><span class="badge bg-success">Completed</span></td>
-                                    <td>100%</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Nike Air Max Launch</strong></td>
-                                    <td>Nike</td>
-                                    <td>$45,000</td>
-                                    <td>$31,200</td>
-                                    <td class="text-success">+280%</td>
-                                    <td><span class="badge bg-primary">Active</span></td>
-                                    <td>75%</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Apple iPhone Campaign</strong></td>
-                                    <td>Apple</td>
-                                    <td>$60,000</td>
-                                    <td>$58,900</td>
-                                    <td class="text-success">+420%</td>
-                                    <td><span class="badge bg-success">Completed</span></td>
-                                    <td>100%</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+    <!-- Projects Summary Table -->
+    <div class="card" style="border: none; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center" style="border-radius: 15px 15px 0 0;">
+            <h5 class="mb-0">
+                <i class="bi bi-table me-2" style="color: #10b981;"></i>
+                Projects Summary
+            </h5>
+            <button class="btn btn-outline-success btn-sm" onclick="exportTableCSV()">
+                <i class="bi bi-file-earmark-excel me-1"></i>Export CSV
+            </button>
         </div>
-
-        <!-- Team Performance -->
-        <div class="col-lg-4 mb-4">
-            <div class="card border-0">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="bi bi-person-check me-2" style="color: #f59e0b;"></i>Team Performance
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="team-stats">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div>
-                                <h6 class="mb-0">rimzaki</h6>
-                                <small class="text-muted">Marketing Manager</small>
-                            </div>
-                            <div class="text-end">
-                                <div class="fw-bold text-success">98%</div>
-                                <small class="text-muted">Task Completion</small>
-                            </div>
-                        </div>
-                        <div class="progress mb-3" style="height: 6px;">
-                            <div class="progress-bar bg-success" style="width: 98%"></div>
-                        </div>
-
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div>
-                                <h6 class="mb-0">admin</h6>
-                                <small class="text-muted">Project Lead</small>
-                            </div>
-                            <div class="text-end">
-                                <div class="fw-bold text-primary">94%</div>
-                                <small class="text-muted">Task Completion</small>
-                            </div>
-                        </div>
-                        <div class="progress mb-3" style="height: 6px;">
-                            <div class="progress-bar bg-primary" style="width: 94%"></div>
-                        </div>
-
-                        <div class="mt-4 p-3 bg-light rounded">
-                            <h6 class="mb-2">🏆 Top Performer</h6>
-                            <p class="mb-1"><strong>rimzaki</strong></p>
-                            <small class="text-muted">12 projects completed this month</small>
-                        </div>
-                    </div>
-                </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="projectsTable">
+                    <thead>
+                        <tr>
+                            <th>Project Name</th>
+                            <th>Client</th>
+                            <th>Status</th>
+                            <th>Progress</th>
+                            <th>Budget</th>
+                            <th>ROI</th>
+                            <th>Due Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="projectsTableBody">
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                <i class="bi bi-arrow-clockwise spin me-2"></i>Loading projects...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Additional Insights -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card border-0">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="bi bi-lightbulb me-2" style="color: #6366f1;"></i>Key Insights & Recommendations
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="insight-card">
-                                <div class="d-flex align-items-center mb-2">
-                                    <div class="insight-icon bg-success">
-                                        <i class="bi bi-trophy text-white"></i>
-                                    </div>
-                                    <h6 class="mb-0 ms-2">Best Performing Client</h6>
-                                </div>
-                                <p><strong>Tesla</strong> generated the highest ROI (340%) with fastest delivery times.</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="insight-card">
-                                <div class="d-flex align-items-center mb-2">
-                                    <div class="insight-icon bg-warning">
-                                        <i class="bi bi-exclamation-triangle text-white"></i>
-                                    </div>
-                                    <h6 class="mb-0 ms-2">Attention Needed</h6>
-                                </div>
-                                <p>3 projects are approaching their deadlines. Consider resource reallocation.</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="insight-card">
-                                <div class="d-flex align-items-center mb-2">
-                                    <div class="insight-icon bg-info">
-                                        <i class="bi bi-graph-up text-white"></i>
-                                    </div>
-                                    <h6 class="mb-0 ms-2">Growth Opportunity</h6>
-                                </div>
-                                <p>Technology sector shows 45% higher conversion rates. Consider expanding.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay" style="display: none;">
+    <div class="loading-content">
+        <i class="bi bi-arrow-clockwise spin" style="font-size: 3rem; color: #6366f1;"></i>
+        <h4 class="mt-3">Generating PDF Report...</h4>
+        <p class="text-muted">Please wait while we prepare your report</p>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
+<!-- Chart.js for charts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- jsPDF for PDF generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- html2canvas for capturing content -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
 <script>
-// Initialize charts when page loads
+// Global variables
+let monthlyChart = null;
+let clientChart = null;
+let reportsData = null;
+
+// Initialize when page loads
 document.addEventListener('DOMContentLoaded', function() {
-    initializeCharts();
+    console.log('📊 Initializing Reports Dashboard...');
     loadReportsData();
+    initializeCharts();
 });
 
+// Load reports data from API
+async function loadReportsData() {
+    try {
+        showLoading(true);
+        
+        // Get filter values
+        const days = document.getElementById('timePeriod').value || 30;
+        const client = document.getElementById('clientFilter').value || 'all';
+        
+        console.log(`📡 Loading reports data: ${days} days, client: ${client}`);
+        
+        const response = await fetch(`/reports/api/stats?days=${days}&client=${client}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        reportsData = await response.json();
+        console.log('✅ Reports data loaded:', reportsData);
+        
+        // Update all sections
+        updateStatsCards(reportsData.overview);
+        updateCharts(reportsData);
+        updateProjectsTable(reportsData.project_performance);
+        updateLastUpdated();
+        
+    } catch (error) {
+        console.error('❌ Error loading reports data:', error);
+        showError('Failed to load reports data. Please try again.');
+    } finally {
+        showLoading(false);
+    }
+}
+
+// Update stats cards
+function updateStatsCards(overview) {
+    console.log('📊 Updating stats cards...');
+    
+    document.getElementById('totalRevenue').textContent = 
+        '$' + (overview.total_revenue || 0).toLocaleString();
+    document.getElementById('completedProjects').textContent = 
+        overview.completed_projects || 0;
+    document.getElementById('totalClients').textContent = 
+        overview.active_projects || 0; // Using active projects as proxy for clients
+    document.getElementById('averageROI').textContent = 
+        Math.round(overview.completion_rate || 0) + '%';
+}
+
+// Initialize charts
 function initializeCharts() {
-    // Revenue Trend Chart
-    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
-    new Chart(revenueCtx, {
+    console.log('📈 Initializing charts...');
+    
+    // Monthly Performance Chart
+    const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+    monthlyChart = new Chart(monthlyCtx, {
         type: 'line',
         data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+            labels: [],
             datasets: [{
                 label: 'Revenue ($)',
-                data: [15000, 22000, 18000, 28000, 32000, 25000, 35000],
+                data: [],
                 borderColor: '#6366f1',
                 backgroundColor: 'rgba(99, 102, 241, 0.1)',
                 tension: 0.4,
                 fill: true
             }, {
                 label: 'Projects Completed',
-                data: [2, 3, 2, 4, 5, 3, 6],
-                borderColor: '#ec4899',
-                backgroundColor: 'rgba(236, 72, 153, 0.1)',
+                data: [],
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
                 tension: 0.4,
-                fill: true,
+                fill: false,
                 yAxisID: 'y1'
             }]
         },
@@ -357,19 +280,25 @@ function initializeCharts() {
                     title: { display: true, text: 'Projects' },
                     grid: { drawOnChartArea: false }
                 }
+            },
+            plugins: {
+                legend: { position: 'top' }
             }
         }
     });
 
-    // Client Distribution Chart
+    // Client Revenue Share Chart
     const clientCtx = document.getElementById('clientChart').getContext('2d');
-    new Chart(clientCtx, {
+    clientChart = new Chart(clientCtx, {
         type: 'doughnut',
         data: {
-            labels: ['Tesla', 'Nike', 'Apple', 'Others'],
+            labels: [],
             datasets: [{
-                data: [35, 25, 30, 10],
-                backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#ec4899'],
+                data: [],
+                backgroundColor: [
+                    '#6366f1', '#10b981', '#f59e0b', '#ef4444', 
+                    '#8b5cf6', '#06b6d4', '#84cc16', '#f97316'
+                ],
                 borderWidth: 0
             }]
         },
@@ -383,56 +312,222 @@ function initializeCharts() {
     });
 }
 
+// Update charts with data
+function updateCharts(data) {
+    console.log('📈 Updating charts...');
+    
+    // Update monthly chart
+    if (monthlyChart && data.revenue_trends) {
+        monthlyChart.data.labels = data.revenue_trends.labels || [];
+        monthlyChart.data.datasets[0].data = data.revenue_trends.revenue || [];
+        monthlyChart.data.datasets[1].data = data.revenue_trends.projects || [];
+        monthlyChart.update();
+    }
+    
+    // Update client chart
+    if (clientChart && data.client_distribution) {
+        clientChart.data.labels = data.client_distribution.map(c => c.name);
+        clientChart.data.datasets[0].data = data.client_distribution.map(c => c.count);
+        clientChart.update();
+    }
+}
+
+// Update projects table
+function updateProjectsTable(projects) {
+    console.log('📋 Updating projects table...');
+    
+    const tbody = document.getElementById('projectsTableBody');
+    
+    if (!projects || projects.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center py-4">
+                    <i class="bi bi-inbox" style="font-size: 2rem; color: #6b7280;"></i>
+                    <p class="mt-2 mb-0">No projects data available</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = projects.map(project => `
+        <tr>
+            <td><strong>${escapeHtml(project.name)}</strong></td>
+            <td>${escapeHtml(project.client)}</td>
+            <td>
+                <span class="badge ${getStatusBadgeClass(project.status)}">
+                    ${project.status.toUpperCase()}
+                </span>
+            </td>
+            <td>
+                <div class="progress" style="height: 6px;">
+                    <div class="progress-bar" style="width: ${project.progress}%"></div>
+                </div>
+                <small>${project.progress}%</small>
+            </td>
+            <td>$${project.budget.toLocaleString()}</td>
+            <td class="text-success">+${project.roi}%</td>
+            <td>${formatDate(project.created_at)}</td>
+        </tr>
+    `).join('');
+}
+
+// Export to PDF
+async function exportToPDF() {
+    console.log('📄 Starting PDF export...');
+    
+    try {
+        showLoading(true, 'Generating PDF Report...');
+        
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        
+        // Add title
+        pdf.setFontSize(20);
+        pdf.setTextColor(99, 102, 241);
+        pdf.text('Marketing Reports', 20, 20);
+        
+        // Add date
+        pdf.setFontSize(12);
+        pdf.setTextColor(100, 100, 100);
+        pdf.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 30);
+        
+        // Add stats summary
+        pdf.setFontSize(16);
+        pdf.setTextColor(0, 0, 0);
+        pdf.text('Summary', 20, 45);
+        
+        const stats = reportsData?.overview || {};
+        let yPos = 55;
+        
+        pdf.setFontSize(12);
+        pdf.text(`Total Revenue: $${(stats.total_revenue || 0).toLocaleString()}`, 20, yPos);
+        yPos += 10;
+        pdf.text(`Completed Projects: ${stats.completed_projects || 0}`, 20, yPos);
+        yPos += 10;
+        pdf.text(`Active Projects: ${stats.active_projects || 0}`, 20, yPos);
+        yPos += 10;
+        pdf.text(`Completion Rate: ${Math.round(stats.completion_rate || 0)}%`, 20, yPos);
+        yPos += 20;
+        
+        // Add projects table
+        pdf.setFontSize(16);
+        pdf.text('Projects Summary', 20, yPos);
+        yPos += 15;
+        
+        const projects = reportsData?.project_performance || [];
+        
+        // Table headers
+        pdf.setFontSize(10);
+        pdf.setTextColor(100, 100, 100);
+        pdf.text('Project', 20, yPos);
+        pdf.text('Client', 70, yPos);
+        pdf.text('Status', 110, yPos);
+        pdf.text('Progress', 140, yPos);
+        pdf.text('ROI', 170, yPos);
+        yPos += 10;
+        
+        // Table rows
+        pdf.setTextColor(0, 0, 0);
+        projects.slice(0, 20).forEach(project => { // Limit to 20 projects
+            if (yPos > 270) { // Add new page if needed
+                pdf.addPage();
+                yPos = 20;
+            }
+            
+            pdf.text(project.name.substring(0, 20), 20, yPos);
+            pdf.text(project.client.substring(0, 15), 70, yPos);
+            pdf.text(project.status, 110, yPos);
+            pdf.text(`${project.progress}%`, 140, yPos);
+            pdf.text(`+${project.roi}%`, 170, yPos);
+            yPos += 8;
+        });
+        
+        // Save the PDF
+        const fileName = `marketing-report-${new Date().toISOString().split('T')[0]}.pdf`;
+        pdf.save(fileName);
+        
+        showAlert('✅ PDF report downloaded successfully!', 'success');
+        
+    } catch (error) {
+        console.error('❌ Error generating PDF:', error);
+        showAlert('❌ Failed to generate PDF. Please try again.', 'danger');
+    } finally {
+        showLoading(false);
+    }
+}
+
+// Export table to CSV
+function exportTableCSV() {
+    console.log('📊 Exporting table to CSV...');
+    
+    const projects = reportsData?.project_performance || [];
+    
+    if (projects.length === 0) {
+        showAlert('No data to export', 'warning');
+        return;
+    }
+    
+    // Create CSV content
+    const headers = ['Project Name', 'Client', 'Status', 'Progress', 'Budget', 'ROI', 'Created Date'];
+    const csvContent = [
+        headers.join(','),
+        ...projects.map(project => [
+            `"${project.name}"`,
+            `"${project.client}"`,
+            project.status,
+            `${project.progress}%`,
+            project.budget,
+            `${project.roi}%`,
+            formatDate(project.created_at)
+        ].join(','))
+    ].join('\n');
+    
+    // Download CSV
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `projects-report-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    
+    showAlert('✅ CSV exported successfully!', 'success');
+}
+
+// Update reports when filters change
 function updateReports() {
-    const timePeriod = document.getElementById('timePeriod').value;
-    const clientFilter = document.getElementById('clientFilter').value;
-    const statusFilter = document.getElementById('statusFilter').value;
-    const userFilter = document.getElementById('userFilter').value;
-    
-    console.log('Updating reports with filters:', {
-        timePeriod, clientFilter, statusFilter, userFilter
-    });
-    
-    // Simulate loading
-    showAlert('📊 Updating reports with new filters...', 'info');
-    
-    // In a real app, you'd fetch new data from the API here
-    setTimeout(() => {
-        showAlert('✅ Reports updated successfully!', 'success');
-    }, 1000);
+    console.log('🔄 Filters changed, updating reports...');
+    loadReportsData();
 }
 
-function loadReportsData() {
-    // Simulate loading data from API
-    console.log('Loading reports data...');
+// Refresh data
+function refreshData() {
+    console.log('🔄 Refreshing reports data...');
+    showAlert('🔄 Refreshing data...', 'info');
+    loadReportsData();
 }
 
-function refreshReports() {
-    showAlert('🔄 Refreshing all report data...', 'info');
-    setTimeout(() => {
-        showAlert('✅ Reports refreshed!', 'success');
-    }, 1500);
+// Update last updated time
+function updateLastUpdated() {
+    document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
 }
 
-function exportAllReports() {
-    showAlert('📥 Exporting all reports as PDF...', 'info');
-    setTimeout(() => {
-        showAlert('✅ Reports exported successfully!', 'success');
-    }, 2000);
+// Utility functions
+function showLoading(show, message = 'Loading...') {
+    const overlay = document.getElementById('loadingOverlay');
+    if (show) {
+        overlay.style.display = 'flex';
+        if (message !== 'Loading...') {
+            overlay.querySelector('h4').textContent = message;
+        }
+    } else {
+        overlay.style.display = 'none';
+    }
 }
 
-function exportTable(tableId, filename) {
-    showAlert(`📊 Exporting ${filename}...`, 'info');
-    setTimeout(() => {
-        showAlert('✅ Table exported successfully!', 'success');
-    }, 1000);
-}
-
-function downloadChart(chartId) {
-    showAlert('📈 Downloading chart as image...', 'info');
-    setTimeout(() => {
-        showAlert('✅ Chart downloaded!', 'success');
-    }, 1000);
+function showError(message) {
+    showAlert(`❌ ${message}`, 'danger');
 }
 
 function showAlert(message, type) {
@@ -451,28 +546,75 @@ function showAlert(message, type) {
         }
     }, 4000);
 }
+
+function getStatusBadgeClass(status) {
+    const classes = {
+        'active': 'bg-primary',
+        'completed': 'bg-success',
+        'paused': 'bg-warning',
+        'cancelled': 'bg-danger'
+    };
+    return classes[status] || 'bg-secondary';
+}
+
+function formatDate(dateString) {
+    return new Date(dateString).toLocaleDateString();
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 </script>
 
 <style>
-.insight-card {
-    padding: 1.5rem;
-    border-radius: 12px;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    margin-bottom: 1rem;
-}
-
-.insight-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.9);
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    backdrop-filter: blur(5px);
 }
 
-.team-stats .progress {
+.loading-content {
+    text-align: center;
+    padding: 2rem;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.progress {
     border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
 }
 
 .table th {
@@ -481,13 +623,19 @@ function showAlert(message, type) {
     border-bottom: 2px solid #e5e7eb;
 }
 
-.fade-in {
-    animation: fadeIn 0.6s ease-out;
+.table td {
+    vertical-align: middle;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .table-responsive {
+        font-size: 0.9rem;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
 }
 </style>
 {% endblock %}
