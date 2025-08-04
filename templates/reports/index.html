@@ -22,6 +22,12 @@
         </div>
     </div>
 
+    <!-- Debug Info Panel (temporary) -->
+    <div class="alert alert-info" id="debugInfo" style="display: none;">
+        <h6><i class="bi bi-info-circle me-2"></i>Debug Information</h6>
+        <div id="debugContent">Loading debug info...</div>
+    </div>
+
     <!-- Simple Filter Bar -->
     <div class="card mb-4" style="border-radius: 12px; border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
         <div class="card-body py-3">
@@ -41,7 +47,10 @@
                 </div>
                 <div class="col-md-6">
                     <div class="text-end">
-                        <small class="text-muted">Last updated: <span id="lastUpdated">Just now</span></small>
+                        <small class="text-muted">Last updated: <span id="lastUpdated">Loading...</span></small>
+                        <button class="btn btn-outline-secondary btn-sm ms-2" onclick="toggleDebug()">
+                            <i class="bi bi-bug me-1"></i>Debug
+                        </button>
                     </div>
                 </div>
             </div>
@@ -51,38 +60,46 @@
     <!-- Key Stats Cards -->
     <div class="row mb-4" id="statsCards">
         <div class="col-md-3 mb-3">
-            <div class="card text-center" style="border: none; border-radius: 15px; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white;">
+            <div class="card text-center loading-card" style="border: none; border-radius: 15px; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white;">
                 <div class="card-body py-4">
                     <i class="bi bi-cash-stack" style="font-size: 2.5rem; margin-bottom: 1rem;"></i>
-                    <h3 id="totalRevenue" class="mb-1">$0</h3>
+                    <h3 id="totalRevenue" class="mb-1">
+                        <i class="bi bi-arrow-clockwise spin"></i>
+                    </h3>
                     <p class="mb-0 opacity-90">Total Revenue</p>
                 </div>
             </div>
         </div>
         <div class="col-md-3 mb-3">
-            <div class="card text-center" style="border: none; border-radius: 15px; background: linear-gradient(135deg, #10b981, #059669); color: white;">
+            <div class="card text-center loading-card" style="border: none; border-radius: 15px; background: linear-gradient(135deg, #10b981, #059669); color: white;">
                 <div class="card-body py-4">
                     <i class="bi bi-check-circle" style="font-size: 2.5rem; margin-bottom: 1rem;"></i>
-                    <h3 id="completedProjects" class="mb-1">0</h3>
+                    <h3 id="completedProjects" class="mb-1">
+                        <i class="bi bi-arrow-clockwise spin"></i>
+                    </h3>
                     <p class="mb-0 opacity-90">Completed Projects</p>
                 </div>
             </div>
         </div>
         <div class="col-md-3 mb-3">
-            <div class="card text-center" style="border: none; border-radius: 15px; background: linear-gradient(135deg, #f59e0b, #d97706); color: white;">
+            <div class="card text-center loading-card" style="border: none; border-radius: 15px; background: linear-gradient(135deg, #f59e0b, #d97706); color: white;">
                 <div class="card-body py-4">
                     <i class="bi bi-people" style="font-size: 2.5rem; margin-bottom: 1rem;"></i>
-                    <h3 id="totalClients" class="mb-1">0</h3>
+                    <h3 id="totalClients" class="mb-1">
+                        <i class="bi bi-arrow-clockwise spin"></i>
+                    </h3>
                     <p class="mb-0 opacity-90">Active Clients</p>
                 </div>
             </div>
         </div>
         <div class="col-md-3 mb-3">
-            <div class="card text-center" style="border: none; border-radius: 15px; background: linear-gradient(135deg, #ef4444, #dc2626); color: white;">
+            <div class="card text-center loading-card" style="border: none; border-radius: 15px; background: linear-gradient(135deg, #ef4444, #dc2626); color: white;">
                 <div class="card-body py-4">
                     <i class="bi bi-graph-up" style="font-size: 2.5rem; margin-bottom: 1rem;"></i>
-                    <h3 id="averageROI" class="mb-1">0%</h3>
-                    <p class="mb-0 opacity-90">Average ROI</p>
+                    <h3 id="averageROI" class="mb-1">
+                        <i class="bi bi-arrow-clockwise spin"></i>
+                    </h3>
+                    <p class="mb-0 opacity-90">Completion Rate</p>
                 </div>
             </div>
         </div>
@@ -100,7 +117,13 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <canvas id="monthlyChart" height="300"></canvas>
+                    <div id="monthlyChartContainer">
+                        <div class="text-center py-4">
+                            <i class="bi bi-arrow-clockwise spin" style="font-size: 2rem; color: #6366f1;"></i>
+                            <p class="mt-2">Loading chart...</p>
+                        </div>
+                    </div>
+                    <canvas id="monthlyChart" height="300" style="display: none;"></canvas>
                 </div>
             </div>
         </div>
@@ -115,7 +138,13 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <canvas id="clientChart" height="250"></canvas>
+                    <div id="clientChartContainer">
+                        <div class="text-center py-4">
+                            <i class="bi bi-arrow-clockwise spin" style="font-size: 2rem; color: #ec4899;"></i>
+                            <p class="mt-2">Loading chart...</p>
+                        </div>
+                    </div>
+                    <canvas id="clientChart" height="250" style="display: none;"></canvas>
                 </div>
             </div>
         </div>
@@ -128,7 +157,7 @@
                 <i class="bi bi-table me-2" style="color: #10b981;"></i>
                 Projects Summary
             </h5>
-            <button class="btn btn-outline-success btn-sm" onclick="exportTableCSV()">
+            <button class="btn btn-outline-success btn-sm" onclick="exportTableCSV()" id="exportBtn" disabled>
                 <i class="bi bi-file-earmark-excel me-1"></i>Export CSV
             </button>
         </div>
@@ -158,15 +187,6 @@
         </div>
     </div>
 </div>
-
-<!-- Loading Overlay -->
-<div id="loadingOverlay" class="loading-overlay" style="display: none;">
-    <div class="loading-content">
-        <i class="bi bi-arrow-clockwise spin" style="font-size: 3rem; color: #6366f1;"></i>
-        <h4 class="mt-3">Generating PDF Report...</h4>
-        <p class="text-muted">Please wait while we prepare your report</p>
-    </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -174,202 +194,358 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <!-- jsPDF for PDF generation -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<!-- html2canvas for capturing content -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <script>
 // Global variables
 let monthlyChart = null;
 let clientChart = null;
 let reportsData = null;
+let debugMode = false;
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', function() {
     console.log('📊 Initializing Reports Dashboard...');
+    
+    // Add error logging
+    window.addEventListener('error', function(e) {
+        console.error('❌ JavaScript Error:', e.error);
+        showAlert('JavaScript error detected. Check console for details.', 'warning');
+    });
+    
+    // Initialize and load data
     loadReportsData();
     initializeCharts();
 });
 
-// Load reports data from API
+// Load reports data from API with better error handling
 async function loadReportsData() {
     try {
-        showLoading(true);
+        updateDebugInfo('Starting API call...');
         
         // Get filter values
         const days = document.getElementById('timePeriod').value || 30;
         const client = document.getElementById('clientFilter').value || 'all';
         
         console.log(`📡 Loading reports data: ${days} days, client: ${client}`);
+        updateDebugInfo(`Making API call: /reports/api/stats?days=${days}&client=${client}`);
         
-        const response = await fetch(`/reports/api/stats?days=${days}&client=${client}`);
+        const response = await fetch(`/reports/api/stats?days=${days}&client=${client}`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        updateDebugInfo(`API Response Status: ${response.status} ${response.statusText}`);
+        console.log('📡 API Response:', response.status, response.statusText);
         
         if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            const errorText = await response.text();
+            console.error('❌ API Error Response:', errorText);
+            updateDebugInfo(`API Error: ${response.status} - ${errorText}`);
+            throw new Error(`HTTP ${response.status}: ${response.statusText}\nResponse: ${errorText}`);
+        }
+        
+        // Check content type
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            console.error('❌ Invalid content type:', contentType, 'Response:', text);
+            updateDebugInfo(`Invalid content type: ${contentType}. Response: ${text.substring(0, 200)}...`);
+            throw new Error(`Expected JSON response but got: ${contentType}`);
         }
         
         reportsData = await response.json();
         console.log('✅ Reports data loaded:', reportsData);
+        updateDebugInfo(`✅ Data loaded successfully! Keys: ${Object.keys(reportsData).join(', ')}`);
+        
+        // Validate data structure
+        if (!reportsData.overview) {
+            updateDebugInfo('⚠️ Missing overview data in API response');
+            throw new Error('Invalid API response: missing overview data');
+        }
         
         // Update all sections
         updateStatsCards(reportsData.overview);
         updateCharts(reportsData);
-        updateProjectsTable(reportsData.project_performance);
+        updateProjectsTable(reportsData.project_performance || []);
         updateLastUpdated();
+        
+        // Enable export button
+        document.getElementById('exportBtn').disabled = false;
+        
+        console.log('✅ All sections updated successfully');
+        updateDebugInfo('✅ All sections updated successfully');
         
     } catch (error) {
         console.error('❌ Error loading reports data:', error);
-        showError('Failed to load reports data. Please try again.');
-    } finally {
-        showLoading(false);
+        updateDebugInfo(`❌ Error: ${error.message}`);
+        showError(`Failed to load reports data: ${error.message}`);
+        
+        // Show fallback data
+        showFallbackData();
     }
 }
 
-// Update stats cards
+// Update stats cards with improved error handling
 function updateStatsCards(overview) {
-    console.log('📊 Updating stats cards...');
+    console.log('📊 Updating stats cards...', overview);
+    updateDebugInfo(`Updating stats cards with data: ${JSON.stringify(overview)}`);
     
-    document.getElementById('totalRevenue').textContent = 
-        '$' + (overview.total_revenue || 0).toLocaleString();
-    document.getElementById('completedProjects').textContent = 
-        overview.completed_projects || 0;
-    document.getElementById('totalClients').textContent = 
-        overview.active_projects || 0; // Using active projects as proxy for clients
-    document.getElementById('averageROI').textContent = 
-        Math.round(overview.completion_rate || 0) + '%';
+    try {
+        // Remove loading spinners and update values
+        document.getElementById('totalRevenue').innerHTML = 
+            '$' + (overview.total_revenue || 0).toLocaleString();
+        document.getElementById('completedProjects').textContent = 
+            overview.completed_projects || 0;
+        document.getElementById('totalClients').textContent = 
+            overview.total_clients || 0;
+        document.getElementById('averageROI').textContent = 
+            Math.round(overview.completion_rate || 0) + '%';
+        
+        // Remove loading class
+        document.querySelectorAll('.loading-card').forEach(card => {
+            card.classList.remove('loading-card');
+        });
+        
+        console.log('✅ Stats cards updated');
+        updateDebugInfo('✅ Stats cards updated successfully');
+        
+    } catch (error) {
+        console.error('❌ Error updating stats cards:', error);
+        updateDebugInfo(`❌ Error updating stats cards: ${error.message}`);
+    }
 }
 
-// Initialize charts
+// Initialize charts with better error handling
 function initializeCharts() {
     console.log('📈 Initializing charts...');
+    updateDebugInfo('Initializing Chart.js charts...');
     
-    // Monthly Performance Chart
-    const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
-    monthlyChart = new Chart(monthlyCtx, {
-        type: 'line',
-        data: {
-            labels: [],
-            datasets: [{
-                label: 'Revenue ($)',
-                data: [],
-                borderColor: '#6366f1',
-                backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                tension: 0.4,
-                fill: true
-            }, {
-                label: 'Projects Completed',
-                data: [],
-                borderColor: '#10b981',
-                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                tension: 0.4,
-                fill: false,
-                yAxisID: 'y1'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: { display: true, text: 'Revenue ($)' }
-                },
-                y1: {
-                    type: 'linear',
-                    position: 'right',
-                    beginAtZero: true,
-                    title: { display: true, text: 'Projects' },
-                    grid: { drawOnChartArea: false }
-                }
+    try {
+        // Check if Chart.js is loaded
+        if (typeof Chart === 'undefined') {
+            throw new Error('Chart.js library not loaded');
+        }
+        
+        // Monthly Performance Chart
+        const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+        monthlyChart = new Chart(monthlyCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Revenue ($)',
+                    data: [],
+                    borderColor: '#6366f1',
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }, {
+                    label: 'Projects Completed',
+                    data: [],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    tension: 0.4,
+                    fill: false,
+                    yAxisID: 'y1'
+                }]
             },
-            plugins: {
-                legend: { position: 'top' }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Revenue ($)' }
+                    },
+                    y1: {
+                        type: 'linear',
+                        position: 'right',
+                        beginAtZero: true,
+                        title: { display: true, text: 'Projects' },
+                        grid: { drawOnChartArea: false }
+                    }
+                },
+                plugins: {
+                    legend: { position: 'top' }
+                }
             }
-        }
-    });
+        });
 
-    // Client Revenue Share Chart
-    const clientCtx = document.getElementById('clientChart').getContext('2d');
-    clientChart = new Chart(clientCtx, {
-        type: 'doughnut',
-        data: {
-            labels: [],
-            datasets: [{
-                data: [],
-                backgroundColor: [
-                    '#6366f1', '#10b981', '#f59e0b', '#ef4444', 
-                    '#8b5cf6', '#06b6d4', '#84cc16', '#f97316'
-                ],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'bottom' }
+        // Client Revenue Share Chart
+        const clientCtx = document.getElementById('clientChart').getContext('2d');
+        clientChart = new Chart(clientCtx, {
+            type: 'doughnut',
+            data: {
+                labels: [],
+                datasets: [{
+                    data: [],
+                    backgroundColor: [
+                        '#6366f1', '#10b981', '#f59e0b', '#ef4444', 
+                        '#8b5cf6', '#06b6d4', '#84cc16', '#f97316'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
             }
-        }
-    });
+        });
+        
+        console.log('✅ Charts initialized');
+        updateDebugInfo('✅ Charts initialized successfully');
+        
+    } catch (error) {
+        console.error('❌ Error initializing charts:', error);
+        updateDebugInfo(`❌ Error initializing charts: ${error.message}`);
+        showError('Failed to initialize charts');
+    }
 }
 
 // Update charts with data
 function updateCharts(data) {
-    console.log('📈 Updating charts...');
+    console.log('📈 Updating charts with data:', data);
+    updateDebugInfo('Updating charts with new data...');
     
-    // Update monthly chart
-    if (monthlyChart && data.revenue_trends) {
-        monthlyChart.data.labels = data.revenue_trends.labels || [];
-        monthlyChart.data.datasets[0].data = data.revenue_trends.revenue || [];
-        monthlyChart.data.datasets[1].data = data.revenue_trends.projects || [];
-        monthlyChart.update();
-    }
-    
-    // Update client chart
-    if (clientChart && data.client_distribution) {
-        clientChart.data.labels = data.client_distribution.map(c => c.name);
-        clientChart.data.datasets[0].data = data.client_distribution.map(c => c.count);
-        clientChart.update();
+    try {
+        // Show charts and hide loading
+        document.getElementById('monthlyChart').style.display = 'block';
+        document.getElementById('monthlyChartContainer').style.display = 'none';
+        document.getElementById('clientChart').style.display = 'block';
+        document.getElementById('clientChartContainer').style.display = 'none';
+        
+        // Update monthly chart
+        if (monthlyChart && data.revenue_trends) {
+            monthlyChart.data.labels = data.revenue_trends.labels || [];
+            monthlyChart.data.datasets[0].data = data.revenue_trends.revenue || [];
+            monthlyChart.data.datasets[1].data = data.revenue_trends.projects || [];
+            monthlyChart.update();
+            console.log('✅ Monthly chart updated');
+        }
+        
+        // Update client chart
+        if (clientChart && data.client_distribution) {
+            clientChart.data.labels = data.client_distribution.map(c => c.name);
+            clientChart.data.datasets[0].data = data.client_distribution.map(c => c.count);
+            clientChart.update();
+            console.log('✅ Client chart updated');
+        }
+        
+        updateDebugInfo('✅ Charts updated successfully');
+        
+    } catch (error) {
+        console.error('❌ Error updating charts:', error);
+        updateDebugInfo(`❌ Error updating charts: ${error.message}`);
     }
 }
 
 // Update projects table
 function updateProjectsTable(projects) {
-    console.log('📋 Updating projects table...');
+    console.log('📋 Updating projects table with', projects.length, 'projects');
+    updateDebugInfo(`Updating projects table with ${projects.length} projects...`);
     
-    const tbody = document.getElementById('projectsTableBody');
-    
-    if (!projects || projects.length === 0) {
-        tbody.innerHTML = `
+    try {
+        const tbody = document.getElementById('projectsTableBody');
+        
+        if (!projects || projects.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="text-center py-4">
+                        <i class="bi bi-inbox" style="font-size: 2rem; color: #6b7280;"></i>
+                        <p class="mt-2 mb-0">No projects data available</p>
+                        <small class="text-muted">Create some projects to see reports</small>
+                    </td>
+                </tr>
+            `;
+            updateDebugInfo('⚠️ No projects data to display');
+            return;
+        }
+        
+        tbody.innerHTML = projects.map(project => `
             <tr>
-                <td colspan="7" class="text-center py-4">
-                    <i class="bi bi-inbox" style="font-size: 2rem; color: #6b7280;"></i>
-                    <p class="mt-2 mb-0">No projects data available</p>
+                <td><strong>${escapeHtml(project.name)}</strong></td>
+                <td>${escapeHtml(project.client)}</td>
+                <td>
+                    <span class="badge ${getStatusBadgeClass(project.status)}">
+                        ${project.status.toUpperCase()}
+                    </span>
                 </td>
+                <td>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar" style="width: ${project.progress}%"></div>
+                    </div>
+                    <small>${project.progress}%</small>
+                </td>
+                <td>$${project.budget.toLocaleString()}</td>
+                <td class="text-success">+${project.roi}%</td>
+                <td>${formatDate(project.created_at)}</td>
             </tr>
-        `;
-        return;
+        `).join('');
+        
+        updateDebugInfo(`✅ Projects table updated with ${projects.length} projects`);
+        
+    } catch (error) {
+        console.error('❌ Error updating projects table:', error);
+        updateDebugInfo(`❌ Error updating projects table: ${error.message}`);
     }
+}
+
+// Show fallback data when API fails
+function showFallbackData() {
+    console.log('📊 Showing fallback data...');
     
-    tbody.innerHTML = projects.map(project => `
+    // Show placeholder data in stats cards
+    document.getElementById('totalRevenue').textContent = '$0';
+    document.getElementById('completedProjects').textContent = '0';
+    document.getElementById('totalClients').textContent = '0';
+    document.getElementById('averageROI').textContent = '0%';
+    
+    // Remove loading spinners
+    document.querySelectorAll('.loading-card').forEach(card => {
+        card.classList.remove('loading-card');
+    });
+    
+    // Show empty state in table
+    document.getElementById('projectsTableBody').innerHTML = `
         <tr>
-            <td><strong>${escapeHtml(project.name)}</strong></td>
-            <td>${escapeHtml(project.client)}</td>
-            <td>
-                <span class="badge ${getStatusBadgeClass(project.status)}">
-                    ${project.status.toUpperCase()}
-                </span>
+            <td colspan="7" class="text-center py-4">
+                <i class="bi bi-exclamation-triangle" style="font-size: 2rem; color: #f59e0b;"></i>
+                <p class="mt-2 mb-0">Failed to load data</p>
+                <button class="btn btn-outline-primary btn-sm mt-2" onclick="refreshData()">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Try Again
+                </button>
             </td>
-            <td>
-                <div class="progress" style="height: 6px;">
-                    <div class="progress-bar" style="width: ${project.progress}%"></div>
-                </div>
-                <small>${project.progress}%</small>
-            </td>
-            <td>$${project.budget.toLocaleString()}</td>
-            <td class="text-success">+${project.roi}%</td>
-            <td>${formatDate(project.created_at)}</td>
         </tr>
-    `).join('');
+    `;
+}
+
+// Debug functions
+function toggleDebug() {
+    debugMode = !debugMode;
+    const debugInfo = document.getElementById('debugInfo');
+    
+    if (debugMode) {
+        debugInfo.style.display = 'block';
+        updateDebugInfo('Debug mode enabled');
+    } else {
+        debugInfo.style.display = 'none';
+    }
+}
+
+function updateDebugInfo(message) {
+    if (debugMode) {
+        const debugContent = document.getElementById('debugContent');
+        const timestamp = new Date().toLocaleTimeString();
+        debugContent.innerHTML += `<div><small class="text-muted">[${timestamp}]</small> ${message}</div>`;
+        debugContent.scrollTop = debugContent.scrollHeight;
+    }
+    console.log(`[DEBUG] ${message}`);
 }
 
 // Export to PDF
@@ -377,7 +553,7 @@ async function exportToPDF() {
     console.log('📄 Starting PDF export...');
     
     try {
-        showLoading(true, 'Generating PDF Report...');
+        showAlert('📄 Generating PDF report...', 'info');
         
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF('p', 'mm', 'a4');
@@ -401,7 +577,7 @@ async function exportToPDF() {
         let yPos = 55;
         
         pdf.setFontSize(12);
-        pdf.text(`Total Revenue: $${(stats.total_revenue || 0).toLocaleString()}`, 20, yPos);
+        pdf.text(`Total Revenue: ${(stats.total_revenue || 0).toLocaleString()}`, 20, yPos);
         yPos += 10;
         pdf.text(`Completed Projects: ${stats.completed_projects || 0}`, 20, yPos);
         yPos += 10;
@@ -452,8 +628,6 @@ async function exportToPDF() {
     } catch (error) {
         console.error('❌ Error generating PDF:', error);
         showAlert('❌ Failed to generate PDF. Please try again.', 'danger');
-    } finally {
-        showLoading(false);
     }
 }
 
@@ -514,18 +688,6 @@ function updateLastUpdated() {
 }
 
 // Utility functions
-function showLoading(show, message = 'Loading...') {
-    const overlay = document.getElementById('loadingOverlay');
-    if (show) {
-        overlay.style.display = 'flex';
-        if (message !== 'Loading...') {
-            overlay.querySelector('h4').textContent = message;
-        }
-    } else {
-        overlay.style.display = 'none';
-    }
-}
-
 function showError(message) {
     showAlert(`❌ ${message}`, 'danger');
 }
@@ -569,26 +731,10 @@ function escapeHtml(text) {
 </script>
 
 <style>
-.loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.9);
+.loading-card h3 {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 9999;
-    backdrop-filter: blur(5px);
-}
-
-.loading-content {
-    text-align: center;
-    padding: 2rem;
-    background: white;
-    border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
 }
 
 .spin {
@@ -625,6 +771,21 @@ function escapeHtml(text) {
 
 .table td {
     vertical-align: middle;
+}
+
+#debugInfo {
+    max-height: 200px;
+    overflow-y: auto;
+    font-family: monospace;
+    font-size: 0.8rem;
+}
+
+#debugContent {
+    max-height: 150px;
+    overflow-y: auto;
+    background: #f8f9fa;
+    padding: 0.5rem;
+    border-radius: 4px;
 }
 
 /* Responsive adjustments */
