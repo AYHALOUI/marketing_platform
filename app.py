@@ -58,6 +58,7 @@ def create_app():
     app.register_blueprint(users_bp)
     app.register_blueprint(deadline_api)
     app.register_blueprint(reports_bp)  # ✅ Make sure this is registered
+
     
     @app.route('/auth/login')
     def login():
@@ -73,6 +74,8 @@ def create_app():
     from models import User, Client, Project, Task
     from sqlalchemy import desc, func
     from datetime import datetime, timedelta, date
+
+    
 
     @app.route('/dashboard')
     @login_required

@@ -5,6 +5,8 @@
 {% block content %}
 <div class="container-fluid">
     <!-- Simple Header -->
+
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h1 class="h3 mb-2" style="font-weight: 800; color: #1f2937;">
@@ -13,97 +15,17 @@
             <p class="text-muted mb-0">Overview of your marketing performance</p>
         </div>
         <div>
-            <button class="btn btn-success me-2" onclick="exportToPDF()">
+            <button class="btn btn-outline-secondary me-2" onclick="history.back()">
+                <i class="bi bi-arrow-left me-1"></i>Back
+            </button>
+            <button class="btn btn-success" onclick="exportToPDF()">
                 <i class="bi bi-file-earmark-pdf me-1"></i>Export PDF
             </button>
-            <button class="btn btn-outline-primary" onclick="refreshData()">
-                <i class="bi bi-arrow-clockwise me-1"></i>Refresh
-            </button>
         </div>
     </div>
 
-    <!-- Debug Info Panel (temporary) -->
-    <div class="alert alert-info" id="debugInfo" style="display: none;">
-        <h6><i class="bi bi-info-circle me-2"></i>Debug Information</h6>
-        <div id="debugContent">Loading debug info...</div>
-    </div>
 
-    <!-- Simple Filter Bar -->
-    <div class="card mb-4" style="border-radius: 12px; border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-        <div class="card-body py-3">
-            <div class="row align-items-center">
-                <div class="col-md-3">
-                    <select class="form-select" id="timePeriod" onchange="updateReports()">
-                        <option value="30" selected>Last 30 Days</option>
-                        <option value="90">Last 3 Months</option>
-                        <option value="365">Last Year</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <select class="form-select" id="clientFilter" onchange="updateReports()">
-                        <option value="all">All Clients</option>
-                        <!-- Will be populated dynamically -->
-                    </select>
-                </div>
-                <div class="col-md-6">
-                    <div class="text-end">
-                        <small class="text-muted">Last updated: <span id="lastUpdated">Loading...</span></small>
-                        <button class="btn btn-outline-secondary btn-sm ms-2" onclick="toggleDebug()">
-                            <i class="bi bi-bug me-1"></i>Debug
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Key Stats Cards -->
-    <div class="row mb-4" id="statsCards">
-        <div class="col-md-3 mb-3">
-            <div class="card text-center loading-card" style="border: none; border-radius: 15px; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white;">
-                <div class="card-body py-4">
-                    <i class="bi bi-cash-stack" style="font-size: 2.5rem; margin-bottom: 1rem;"></i>
-                    <h3 id="totalRevenue" class="mb-1">
-                        <i class="bi bi-arrow-clockwise spin"></i>
-                    </h3>
-                    <p class="mb-0 opacity-90">Total Revenue</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card text-center loading-card" style="border: none; border-radius: 15px; background: linear-gradient(135deg, #10b981, #059669); color: white;">
-                <div class="card-body py-4">
-                    <i class="bi bi-check-circle" style="font-size: 2.5rem; margin-bottom: 1rem;"></i>
-                    <h3 id="completedProjects" class="mb-1">
-                        <i class="bi bi-arrow-clockwise spin"></i>
-                    </h3>
-                    <p class="mb-0 opacity-90">Completed Projects</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card text-center loading-card" style="border: none; border-radius: 15px; background: linear-gradient(135deg, #f59e0b, #d97706); color: white;">
-                <div class="card-body py-4">
-                    <i class="bi bi-people" style="font-size: 2.5rem; margin-bottom: 1rem;"></i>
-                    <h3 id="totalClients" class="mb-1">
-                        <i class="bi bi-arrow-clockwise spin"></i>
-                    </h3>
-                    <p class="mb-0 opacity-90">Active Clients</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card text-center loading-card" style="border: none; border-radius: 15px; background: linear-gradient(135deg, #ef4444, #dc2626); color: white;">
-                <div class="card-body py-4">
-                    <i class="bi bi-graph-up" style="font-size: 2.5rem; margin-bottom: 1rem;"></i>
-                    <h3 id="averageROI" class="mb-1">
-                        <i class="bi bi-arrow-clockwise spin"></i>
-                    </h3>
-                    <p class="mb-0 opacity-90">Completion Rate</p>
-                </div>
-            </div>
-        </div>
-    </div>
+    
 
     <!-- Charts Section -->
     <div class="row mb-4">
@@ -220,14 +142,10 @@ document.addEventListener('DOMContentLoaded', function() {
 // Load reports data from API with better error handling
 async function loadReportsData() {
     try {
-        updateDebugInfo('Starting API call...');
+
+        const days = 30;
+        const client = 'all';
         
-        // Get filter values
-        const days = document.getElementById('timePeriod').value || 30;
-        const client = document.getElementById('clientFilter').value || 'all';
-        
-        console.log(`📡 Loading reports data: ${days} days, client: ${client}`);
-        updateDebugInfo(`Making API call: /reports/api/stats?days=${days}&client=${client}`);
         
         const response = await fetch(`/reports/api/stats?days=${days}&client=${client}`, {
             method: 'GET',
@@ -236,14 +154,10 @@ async function loadReportsData() {
                 'Content-Type': 'application/json'
             }
         });
-        
-        updateDebugInfo(`API Response Status: ${response.status} ${response.statusText}`);
-        console.log('📡 API Response:', response.status, response.statusText);
-        
+                
         if (!response.ok) {
             const errorText = await response.text();
             console.error('❌ API Error Response:', errorText);
-            updateDebugInfo(`API Error: ${response.status} - ${errorText}`);
             throw new Error(`HTTP ${response.status}: ${response.statusText}\nResponse: ${errorText}`);
         }
         
@@ -252,17 +166,14 @@ async function loadReportsData() {
         if (!contentType || !contentType.includes('application/json')) {
             const text = await response.text();
             console.error('❌ Invalid content type:', contentType, 'Response:', text);
-            updateDebugInfo(`Invalid content type: ${contentType}. Response: ${text.substring(0, 200)}...`);
             throw new Error(`Expected JSON response but got: ${contentType}`);
         }
         
         reportsData = await response.json();
         console.log('✅ Reports data loaded:', reportsData);
-        updateDebugInfo(`✅ Data loaded successfully! Keys: ${Object.keys(reportsData).join(', ')}`);
         
         // Validate data structure
         if (!reportsData.overview) {
-            updateDebugInfo('⚠️ Missing overview data in API response');
             throw new Error('Invalid API response: missing overview data');
         }
         
@@ -270,17 +181,14 @@ async function loadReportsData() {
         updateStatsCards(reportsData.overview);
         updateCharts(reportsData);
         updateProjectsTable(reportsData.project_performance || []);
-        updateLastUpdated();
         
         // Enable export button
         document.getElementById('exportBtn').disabled = false;
         
         console.log('✅ All sections updated successfully');
-        updateDebugInfo('✅ All sections updated successfully');
         
     } catch (error) {
         console.error('❌ Error loading reports data:', error);
-        updateDebugInfo(`❌ Error: ${error.message}`);
         showError(`Failed to load reports data: ${error.message}`);
         
         // Show fallback data
@@ -289,10 +197,7 @@ async function loadReportsData() {
 }
 
 // Update stats cards with improved error handling
-function updateStatsCards(overview) {
-    console.log('📊 Updating stats cards...', overview);
-    updateDebugInfo(`Updating stats cards with data: ${JSON.stringify(overview)}`);
-    
+function updateStatsCards(overview) {    
     try {
         // Remove loading spinners and update values
         document.getElementById('totalRevenue').innerHTML = 
@@ -309,20 +214,15 @@ function updateStatsCards(overview) {
             card.classList.remove('loading-card');
         });
         
-        console.log('✅ Stats cards updated');
-        updateDebugInfo('✅ Stats cards updated successfully');
+       
         
     } catch (error) {
-        console.error('❌ Error updating stats cards:', error);
-        updateDebugInfo(`❌ Error updating stats cards: ${error.message}`);
     }
 }
 
 // Initialize charts with better error handling
 function initializeCharts() {
-    console.log('📈 Initializing charts...');
-    updateDebugInfo('Initializing Chart.js charts...');
-    
+
     try {
         // Check if Chart.js is loaded
         if (typeof Chart === 'undefined') {
@@ -398,20 +298,15 @@ function initializeCharts() {
             }
         });
         
-        console.log('✅ Charts initialized');
-        updateDebugInfo('✅ Charts initialized successfully');
-        
+    
     } catch (error) {
-        console.error('❌ Error initializing charts:', error);
-        updateDebugInfo(`❌ Error initializing charts: ${error.message}`);
-        showError('Failed to initialize charts');
+     
     }
 }
 
 // Update charts with data
 function updateCharts(data) {
     console.log('📈 Updating charts with data:', data);
-    updateDebugInfo('Updating charts with new data...');
     
     try {
         // Show charts and hide loading
@@ -437,18 +332,15 @@ function updateCharts(data) {
             console.log('✅ Client chart updated');
         }
         
-        updateDebugInfo('✅ Charts updated successfully');
         
     } catch (error) {
         console.error('❌ Error updating charts:', error);
-        updateDebugInfo(`❌ Error updating charts: ${error.message}`);
     }
 }
 
 // Update projects table
 function updateProjectsTable(projects) {
     console.log('📋 Updating projects table with', projects.length, 'projects');
-    updateDebugInfo(`Updating projects table with ${projects.length} projects...`);
     
     try {
         const tbody = document.getElementById('projectsTableBody');
@@ -463,7 +355,6 @@ function updateProjectsTable(projects) {
                     </td>
                 </tr>
             `;
-            updateDebugInfo('⚠️ No projects data to display');
             return;
         }
         
@@ -487,12 +378,8 @@ function updateProjectsTable(projects) {
                 <td>${formatDate(project.created_at)}</td>
             </tr>
         `).join('');
-        
-        updateDebugInfo(`✅ Projects table updated with ${projects.length} projects`);
-        
+            
     } catch (error) {
-        console.error('❌ Error updating projects table:', error);
-        updateDebugInfo(`❌ Error updating projects table: ${error.message}`);
     }
 }
 
@@ -525,28 +412,9 @@ function showFallbackData() {
     `;
 }
 
-// Debug functions
-function toggleDebug() {
-    debugMode = !debugMode;
-    const debugInfo = document.getElementById('debugInfo');
-    
-    if (debugMode) {
-        debugInfo.style.display = 'block';
-        updateDebugInfo('Debug mode enabled');
-    } else {
-        debugInfo.style.display = 'none';
-    }
-}
 
-function updateDebugInfo(message) {
-    if (debugMode) {
-        const debugContent = document.getElementById('debugContent');
-        const timestamp = new Date().toLocaleTimeString();
-        debugContent.innerHTML += `<div><small class="text-muted">[${timestamp}]</small> ${message}</div>`;
-        debugContent.scrollTop = debugContent.scrollHeight;
-    }
-    console.log(`[DEBUG] ${message}`);
-}
+
+
 
 // Export to PDF
 async function exportToPDF() {
@@ -682,10 +550,7 @@ function refreshData() {
     loadReportsData();
 }
 
-// Update last updated time
-function updateLastUpdated() {
-    document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
-}
+
 
 // Utility functions
 function showError(message) {
@@ -799,4 +664,6 @@ function escapeHtml(text) {
     }
 }
 </style>
+
+
 {% endblock %}
