@@ -65,6 +65,11 @@ def create_app():
             return redirect(url_for('dashboard'))
         return render_template('auth/login.html')
     
+    @app.route('/simple-dashboard')
+    @login_required
+    def simple_dashboard():
+        return render_template('simple_dashboard.html')
+    
     from models import User, Client, Project, Task
     from sqlalchemy import desc, func
     from datetime import datetime, timedelta, date
@@ -184,6 +189,8 @@ def create_app():
         db.create_all()
     
     return app
+
+
 
 if __name__ == '__main__':
     app = create_app()

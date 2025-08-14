@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_login import login_required, current_user
-from models import Project, Task, db
+from models import Project, User, Task, db
 from datetime import datetime
 
 projects_bp = Blueprint('projects', __name__, url_prefix='/api/projects')

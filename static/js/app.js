@@ -238,8 +238,9 @@ async function handleDeleteProject(projectId, projectName) {
 }
 
 function viewProjectDetails(projectId) {
-    // For now, show a placeholder
-    showAlert(`Project details view coming soon! Project ID: ${projectId}`, 'info');
+    setTimeout(() => {
+        window.location.href = `/project/${projectId}`;
+    }, 500);
 }
 
 // Navigation Functions
