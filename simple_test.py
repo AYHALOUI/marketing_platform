@@ -35,8 +35,6 @@ def test_reminder():
         print("💡 Make sure N8N is running on localhost:5678")
 
 if __name__ == "__main__":
-    print("📧 CHANGE YOUR EMAIL FIRST!")
-    print(f"Current email: {your_email}")
     
     if your_email == "your-email@example.com":
         print("❌ Please update 'your_email' in the script first!")
